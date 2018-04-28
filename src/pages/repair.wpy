@@ -1,0 +1,13 @@
+<style>
+</style>
+<template>
+    <view class="container">
+        我的报修
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy'
+
+    export default class Repair extends wepy.page {}
+</script>
