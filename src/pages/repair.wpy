@@ -1,13 +1,136 @@
-<style>
+<style lang="less">
+    .register-wrap {
+        margin-top: 10px;
+    }
+    .error-message {
+        color: #E64340;
+    }
+    .bx_title {
+        background-color: #fff;
+        font-size: 20px;
+        color: #000;
+        text-align: center;
+        margin-bottom: 1em;
+    }
 </style>
 <template>
-    <view class="container">
-        我的报修
+    <view class="page__bd">
+        <view class="register-wrap">
+            <form bindsubmit="submit">
+                <view class="weui-toptips weui-toptips_warn" wx:if="{{ errorMessage }}">{{ errorMessage }}</view>
+
+                <view class="weui-cells__title">申报类型</view>
+                <view class="page-section page-section-gap">
+                    <radio-group @change="radioChange">
+                        <label class="radio" wx:for="{{items}}" wx:key="value" style="margin-left:15px;">
+                            <radio value="{{item.value}}" checked="{{item.checked}}"/> {{item.name}}
+                        </label>
+                    </radio-group>
+                </view>
+
+                <view class="weui-cells__title">申报地址</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell weui-cell_input">
+                        <view class="weui-cell__bd">
+                            <input class="weui-input" placeholder="请输入申报地址" />
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__title">申报事项</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell">
+                        <view class="weui-cell__bd">
+                            <textarea class="weui-textarea" placeholder="请简单描述申报事项" style="height: 3.3em" />
+                            <view class="weui-textarea-counter">0/200</view>
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__title">申报图片</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell">
+                        <view class="weui-cell__bd">
+                            <view class="weui-uploader">
+                                <view class="weui-uploader__hd">
+                                    <view class="weui-uploader__title">点击可预览选好的图片</view>
+                                    <view class="weui-uploader__info">{{imageList.length}}/{{count[countIndex]}}</view>
+                                </view>
+                                <view class="weui-uploader__bd">
+                                    <view class="weui-uploader__files">
+                                        <block for="{{imageList}}" key="k" index="index" item="image">
+                                            <view class="weui-uploader__file">
+                                                <image class="weui-uploader__img" src="{{image}}" data-src="{{image}}" @tap="previewImage"></image>
+                                            </view>
+                                        </block>
+                                    </view>
+                                    <view class="weui-uploader__input-box">
+                                        <view class="weui-uploader__input" @tap="chooseImage"></view>
+                                    </view>
+                                </view>
+                            </view>
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-btn-area">
+                    <button class="weui-btn" type="primary" formType="submit">提交申报</button>
+                </view>
+            </form>
+
+        </view>
     </view>
 </template>
 
 <script>
     import wepy from 'wepy'
+    import api from '@/utils/api'
 
-    export default class Repair extends wepy.page {}
+    var sourceType = [ ['camera'], ['album'], ['camera', 'album'] ]
+
+    export default class Repair extends wepy.page {
+        config = {
+            navigationBarTitleText: '我要申报'
+        }
+        data = {
+            items: [
+                {value: '1', name: '水务'},
+                {value: '2', name: '电务', checked: 'true'},
+                {value: '3', name: '木工'},
+                {value: '4', name: '其他'},
+            ],
+            imageList: [],
+            sourceTypeIndex: 2,
+            sourceType: ['拍照', '相册', '拍照或相册'],
+
+            countIndex: 2,
+            count: [1, 2, 3]
+        }
+        methods = {
+            radioChange (e) {
+                this.items.forEach(v => {
+                    v.checked = v.value === e.detail.value;
+                });
+            },
+            chooseImage () {
+                wepy.chooseImage({
+                    sourceType: sourceType[this.data.sourceTypeIndex],
+                    count: this.data.count[this.data.countIndex],
+                }).then(res => {
+                    this.imageList = res.tempFilePaths
+                    console.log(this.imageList)
+                    console.log(res.tempFilePaths)
+                    this.$apply()
+                })
+            },
+            previewImage (e) {
+                var current = e.target.dataset.src
+
+                wepy.previewImage({
+                    current: current,
+                    urls: this.data.imageList
+                })
+            }
+        }
+    }
 </script>

@@ -65,7 +65,7 @@
                     },
                     {
                         pagePath: 'pages/repair',
-                        text: '报修',
+                        text: '申修',
                         iconPath: 'images/repair.png',
                         selectedIconPath: 'images/repair_selected.png'
                     },

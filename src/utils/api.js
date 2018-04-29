@@ -12,7 +12,7 @@ const request = async (options, showLoading = true) => {
     // 拼接请求地址
     options.url = `${host}/${options.url}`
     // 调用小程序的 request 方法
-    let res = await wepy.request(options)
+    let response = await wepy.request(options)
 
     if (showLoading) {
         // 隐藏加载中
@@ -20,13 +20,19 @@ const request = async (options, showLoading = true) => {
     }
 
     // 服务器异常后给与提示
-    if (res.statusCode === 500) {
+    if (response.statusCode === 500) {
         wepy.showModal({
             title: '提示',
             content: '服务器错误，请重试'
         })
     }
-    return response(res)
+
+    // 存在新 token 则替换本地 token
+    if (response.header.Authorization) {
+        wepy.setStorageSync('access_token', response.header.Authorization)
+    }
+
+    return response
 }
 
 // 带身份认证的请求
@@ -47,22 +53,6 @@ const authRequest = async (options, showLoading = true) => {
     return request(options, showLoading)
 }
 
-const response = async (response) => {
-    return response
-}
-
-// 带身份认证的响应
-const authResponse = async (res) => {
-    // 判断一下响应中是否有 token，如果有就直接使用此 token 替换掉本地的 token。
-    let access_token = res.headers.authorization;
-    if (access_token) {
-        // 如果 header 中存在 token，那么触发 refreshToken 方法，替换本地的 token
-        wepy.setStorageSync('access_token', access_token)
-    }
-
-    return response(res)
-}
-
 // 获取用户微信信息
 const getUserInfo = async () => {
     let data = await wepy.getUserInfo()
@@ -79,34 +69,29 @@ const login = async (params = {}) => {
 
     try {
         // 接口请求 weapp/authorizations
-        let authResponse = await request({
+        let response = await request({
             url: 'weapp/authorizations',
             data: params,
             method: 'POST'
         })
-
         // 登录成功，记录 token 信息
-        if (authResponse.statusCode === 200) {
-            console.log(authResponse)
-            console.log(authResponse.data.meta)
-            wepy.setStorageSync('access_token', authResponse.data.meta.access_token)
-            wepy.setStorageSync('access_token_expired_at', new Date().getTime() + authResponse.data.meta.expires_in * 1000)
+        if (response.statusCode === 201 || response.statusCode === 200) {
+            wepy.setStorageSync('access_token', response.data.meta.access_token)
+            // wepy.setStorageSync('access_token_expired_at', new Date().getTime() + response.data.meta.expires_in * 1000)
         }
+
+        return response
     } catch (error) {
         wepy.showModal({
             title: '提示',
             content: error.error || '服务器错误，请重试'
         })
     }
-
-    return authResponse
 }
 
 export default {
     request,
     authRequest,
-    response,
-    authResponse,
     login,
     getUserInfo,
 }

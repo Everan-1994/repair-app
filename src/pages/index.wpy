@@ -4,7 +4,7 @@
 <template>
     <view class="page__bd">
         <view class="weui-panel weui-panel_access">
-            <view class="weui-panel__hd">话题列表</view>
+            <view class="weui-panel__hd">最新报修</view>
             <view class="weui-panel__bd">
                 <repeat for="{{ topics }}" key="id" index="index" item="topic">
                     <navigator url="" class="weui-media-box weui-media-box_appmsg" hover-class="weui-cell_active">
@@ -61,7 +61,7 @@
             // Token 存在则说明已登录
             if (accessToken) {
                 // 测试 authRequest 接口
-                let userResponse = await api.authRequest('user')
+                let userResponse = await api.authRequest('user', false)
                 this.userInfo = userResponse.data
                 this.$apply()
             } else {
@@ -76,7 +76,7 @@
                     // 登陆 后台授权
                     await api.login(info)
                     // 获取 用户信息
-                    let userResponse = await api.authRequest('user')
+                    let userResponse = await api.authRequest('user', false)
                     this.userInfo = userResponse.data
                     this.$apply()
                 }
