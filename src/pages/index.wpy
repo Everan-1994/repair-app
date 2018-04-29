@@ -25,10 +25,12 @@
 
 <script>
     import wepy from 'wepy'
+    import api from '@/utils/api'
 
     export default class Index extends wepy.page {
         // 可用于页面模板绑定的数据
         data = {
+            userInfo: null,
             topics: [
                 {
                     id: 1,
@@ -51,6 +53,34 @@
                     body: 'repair 测试内容4'
                 }
             ]
+        }
+        async onShow() {
+            // 获取缓存中的 access_token
+            let accessToken = wepy.getStorageSync('access_token')
+
+            // Token 存在则说明已登录
+            if (accessToken) {
+                // 测试 authRequest 接口
+                let userResponse = await api.authRequest('user')
+                this.userInfo = userResponse.data
+                this.$apply()
+            } else {
+                // 获取用户微信信息
+                let userInfo = await api.getUserInfo()
+                if (userInfo) {
+                    let info = {
+                        nickname: userInfo.nickName,
+                        sex: userInfo.gender,
+                        avatar: userInfo.avatarUrl
+                    }
+                    // 登陆 后台授权
+                    await api.login(info)
+                    // 获取 用户信息
+                    let userResponse = await api.authRequest('user')
+                    this.userInfo = userResponse.data
+                    this.$apply()
+                }
+            }
         }
     }
 </script>
