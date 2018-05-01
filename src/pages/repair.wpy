@@ -39,8 +39,8 @@
                             <view class="weui-label ts-text">当前选择</view>
                         </view>
                         <view class="weui-cell__hd">
-                            <picker @change="bindPickerChange" value="{{index}}" range="{{area}}" name="area">
-                                <view class="weui-input">{{area[index]}}</view>
+                            <picker @change="bindPickerChange" value="{{ index }}" range="{{ area }}" name="area">
+                                <view class="weui-input">{{ area[index] }}</view>
                             </picker>
                         </view>
                     </view>
@@ -122,9 +122,9 @@
             imageList: [],
             sourceTypeIndex: 2,
             sourceType: ['拍照', '相册', '拍照或相册'],
-
             countIndex: 2,
-            count: [1, 2, 3]
+            count: [1, 2, 3],
+            userInfo: null
         }
         async submit (e) {
             let formData = e.detail.value
@@ -137,6 +137,22 @@
                     duration: 2000
                 })
                 return
+            }
+        }
+        async onShow() {
+            // 获取缓存中的 access_token
+            let accessToken = wepy.getStorageSync('access_token')
+
+            // Token 存在则说明已登录
+            if (accessToken) {
+                let userResponse = await api.authRequest('user', false)
+                this.userInfo = userResponse.data
+                if (this.userInfo.school_id == 0) {
+                    wepy.redirectTo({
+                        url: '/pages/commons/fail'
+                    })
+                }
+                this.$apply()
             }
         }
         methods = {

@@ -11,15 +11,6 @@
         border-radius: 50%;
     }
 
-    .logout {
-        margin-top: 30px;
-    }
-
-    .introduction {
-        font-size: 13px;
-        color: #888888;
-    }
-
     .weui-cell {
         padding: 20px 15px;
     }
@@ -39,15 +30,12 @@
     <view class="page">
         <view class="page__bd">
             <view class="weui-cells weui-cells_after-title">
-                <navigator class="weui-cell" url="">
+                <navigator class="weui-cell" url="./info">
                     <view class="weui-cell__hd avatar-wrap">
                         <image class="avatar" src="{{ userInfo.avatar }}"/>
                     </view>
                     <view class="weui-cell__bd" style="margin-left:.5em;">
-                        <view>{{ userInfo.name }}</view>
-                    </view>
-                    <view class="weui-cell__bd" style="margin-left: -10em;">
-                        <image src="./../images/boy.png" class="icons"></image>
+                        <view>{{ userInfo.name }} <image src="./../images/boy.png" class="icons"></image></view>
                     </view>
                     <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                 </navigator>

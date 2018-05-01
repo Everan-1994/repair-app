@@ -1,0 +1,279 @@
+<style lang="less">
+    .ts-text {
+        color: #1AAD16;
+    }
+    .error-message {
+        color: #E64340;
+    }
+</style>
+<template>
+    <view class="page__bd">
+        <view class="register-wrap">
+            <form bindsubmit="submit">
+                <view class="weui-toptips weui-toptips_warn" wx:if="{{ errorMessage }}">{{ errorMessage }}</view>
+
+                <!-- 手机号  -->
+                <view class="weui-cells__title {{ errors.phone ? 'weui-cell_warn' : ''}}">手机号</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell weui-cell_input {{ errors.phone ? 'weui-cell_warn' : ''}}">
+                        <view class="weui-cell__bd">
+                            <input disabled="{{ phoneDisabled }}" class="weui-input" type="number" placeholder="请输入手机号" @input="bindPhoneInput"/>
+                        </view>
+                        <view class="weui-cell__ft">
+                            <icon wx:if="{{ errors.phone }}" type="warn" size="23" color="#E64340"></icon>
+                            <view class="weui-vcode-btn" @tap="tapCaptchaCode">获取验证码</view>
+                        </view>
+                    </view>
+                </view>
+                <view wx:if="{{ errors.phone }}" class="weui-cells__tips error-message">{{errors.phone[0]}}</view>
+
+                <view class="weui-cells weui-cells_after-title" hidden="{{ codeDisabled }}">
+                    <view class="weui-cell weui-cell_input">
+                        <view class="weui-cell__hd">
+                            <view class="weui-label ts-text">验证码</view>
+                        </view>
+                        <view class="weui-cell__hd">
+                            <input class="weui-input" type="number" placeholder="请填写验证码" name="code" />
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__title">选择学校</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell weui-cell_input">
+                        <view class="weui-cell__hd">
+                            <view class="weui-label ts-text">当前选择</view>
+                        </view>
+                        <view class="weui-cell__hd">
+                            <picker @change="bindPickerChange" value="{{ index }}" range="{{ schools }}" range-key="school_name">
+                                <view class="weui-input">{{ schools[index].school_name }}</view>
+                            </picker>
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__title">我的住址</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell">
+                        <view class="weui-cell__bd">
+                            <textarea class="weui-textarea" placeholder="请填写住址" style="height: 3.3em" name="content" />
+                            <view class="weui-textarea-counter">0/100</view>
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-btn-area">
+                    <button class="weui-btn" type="primary" formType="submit">保存信息</button>
+                </view>
+            </form>
+
+            <!-- 验证码输入模态框 -->
+            <modal class="modal" hidden="{{ captchaModalHidden }}" no-cancel bindconfirm="sendVerificationCode">
+                <view wx:if="{{ errors.captchaValue }}" class="weui-cells__tips error-message">{{ errors.captchaValue[0] }}</view>
+                <view class="weui-cell weui-cell_input weui-cell_vcode">
+                    <view class="weui-cell__bd">
+                        <input class="weui-input" placeholder="图片验证码" @input="bindCaptchaCodeInput"/>
+                    </view>
+                    <view class="weui-cell__ft">
+                        <image class="weui-vcode-img" @tap="tapCaptchaCode" src="{{ captcha.imageContent }}" style="width: 100px"></image>
+                    </view>
+                </view>
+            </modal>
+
+            <Footer></Footer>
+
+        </view>
+    </view>
+</template>
+
+<script>
+    import wepy from 'wepy'
+    import api from '@/utils/api'
+    import Footer from './commons/footer'
+
+    export default class Info extends wepy.page {
+        components = {
+            Footer,
+        }
+        config = {
+            navigationBarTitleText: '个人信息'
+        }
+        data = {
+            schools: [],
+            index: 0,
+            // 用户信息
+            school: null,
+            phone: null,
+            address: null,
+            // 手机号 input 是否 disabled
+            phoneDisabled: false,
+            // 验证码 input 是否 disabled
+            codeDisabled: true,
+            // 图片验证码 modal 是否显示
+            captchaModalHidden: true,
+            // 用户输入的验证码
+            captchaValue: null,
+            // 图片验证码 key 及过期时间
+            captcha: {},
+            // 表单错误
+            errors: {},
+            // 短信验证码 key 及过期时间
+            verificationCode: {}
+        }
+
+        async onShow() {
+            // 获取缓存中的 access_token
+            let accessToken = wepy.getStorageSync('access_token')
+
+            // Token 存在则说明已登录
+            if (accessToken) {
+                // authRequest 接口
+                await api.authRequest('user', false)
+            }
+
+            let school = await api.authRequest('getSchoolList', false)
+            this.schools = school.data
+//            school.data.forEach(v => {
+//                this.schools.push(v.school_name)
+//            })
+            this.$apply()
+        }
+
+        // 获取图片验证码
+        async getCaptchaCode() {
+            this.errors.phone = null
+
+            // 判断手机号是否正确
+            if (!(/^1[3456789]\d{9}$/.test(this.phone))) {
+                this.errors.phone = ['请输入正确的手机号']
+                this.$apply()
+                return false
+            }
+
+            try {
+                // 调用发送验证码接口，参数为手机号
+                let captchaResponse = await api.request({
+                    url: 'captchas',
+                    method: 'POST',
+                    data: {
+                        phone: this.phone
+                    }
+                })
+
+                // 表单错误
+                if (captchaResponse.statusCode === 422) {
+                    this.errors = captchaResponse.data.errors
+                    this.$apply()
+                }
+
+                // 记录 key 和过期时间，打开 modal
+                if (captchaResponse.statusCode === 200) {
+                    this.captcha = {
+                        key: captchaResponse.data.captcha_key,
+                        imageContent: captchaResponse.data.captcha_image_content,
+                        expiredAt: Date.parse(captchaResponse.data.expired_at)
+                    }
+
+                    // 关闭 modal
+                    this.captchaModalHidden = false
+                    this.$apply()
+                }
+            } catch (err) {
+                wepy.showModal({
+                    title: '提示',
+                    content: '服务器错误'
+                })
+            }
+        }
+
+        // 重置保存流程，初始化 data 数据
+        resetInfo() {
+            this.captchaModalHidden = true
+            this.phoneDisabled = false
+            this.codeDisabled = true
+            this.captcha = {}
+            this.verificationCode = {}
+            this.errors = {}
+        }
+
+        methods = {
+            // 绑定手机输入
+            bindPhoneInput (e) {
+                this.phone = e.detail.value
+            },
+            // 绑定验证码输入
+            bindCaptchaCodeInput (e) {
+                this.captchaValue = e.detail.value
+            },
+            // 响应获取图片验证码按钮点击事件
+            async tapCaptchaCode() {
+                this.getCaptchaCode()
+            },
+            // 发送短信验证码
+            async sendVerificationCode() {
+                if (!this.captchaValue) {
+                    this.errors.captchaValue = ['请输入图片验证码']
+                    return false
+                }
+
+                // 检查验证码是否过期，重置流程
+                if (new Date().getTime() > this.captcha.expiredAt) {
+                    wepy.showToast({
+                        title: '验证码已过期',
+                        icon: 'none',
+                        duration: 2000
+                    })
+                    this.resetInfo()
+                    return false
+                }
+
+                try {
+                    let codeResponse = await api.request({
+                        url: 'verificationCodes',
+                        method: 'POST',
+                        data: {
+                            captcha_key: this.captcha.key,
+                            captcha_code: this.captchaValue
+                        }
+                    })
+
+                    // 验证码错误提示
+                    if (codeResponse.statusCode === 401) {
+                        this.errors.captchaValue = ['图片验证码错误']
+                        this.$apply()
+                        await this.getCaptchaCode()
+                        return false
+                    }
+
+                    // 记录 key 和 过期时间
+                    if (codeResponse.statusCode === 200) {
+                        this.verificationCode = {
+                            key: codeResponse.data.key,
+                            expiredAt: Date.parse(codeResponse.data.expired_at)
+                        }
+
+                        // 关闭modal
+                        this.captchaModalHidden = true
+                        // 手机输入框 disabled
+                        this.phoneDisabled = true
+                        // 验证码输入框 disabled
+                        this.codeDisabled = false
+                        // 清空报错信息
+                        this.errors = {}
+                        this.$apply()
+                    }
+                } catch (err) {
+                    console.log(err)
+                    wepy.showModal({
+                        title: '提示',
+                        content: '服务器错误，请联系管理员'
+                    })
+                }
+            },
+            bindPickerChange (e) {
+                this.index = e.detail.value;
+                console.log(this.schools[this.index].id)
+            },
+        };
+    }
+</script>

@@ -23,7 +23,7 @@ const request = async (options, showLoading = true) => {
     if (response.statusCode === 500) {
         wepy.showModal({
             title: '提示',
-            content: '服务器错误，请重试'
+            content: response.data.msg || '服务器错误，请重试'
         })
     }
 
@@ -36,10 +36,11 @@ const request = async (options, showLoading = true) => {
 }
 
 // 带身份认证的请求
-const authRequest = async (options, showLoading = true) => {
+const authRequest = async (options, showLoading = true, method = 'get') => {
     if (typeof options === 'string') {
         options = {
-            url: options
+            url: options,
+            method: method
         }
     }
     // 从缓存中取出 Token
@@ -77,6 +78,12 @@ const login = async (params = {}) => {
         // 登录成功，记录 token 信息
         if (response.statusCode === 201 || response.statusCode === 200) {
             wepy.setStorageSync('access_token', response.data.meta.access_token)
+            if (response.data.school_id > 0) {
+                wepy.setStorageSync('school_id', response.data.school_id)
+            }
+            if (response.data.phone) {
+                wepy.setStorageSync('phone', response.data.phone)
+            }
             // wepy.setStorageSync('access_token_expired_at', new Date().getTime() + response.data.meta.expires_in * 1000)
         }
 

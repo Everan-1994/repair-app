@@ -48,6 +48,8 @@
                 'pages/index',
                 'pages/repair',
                 'pages/user',
+                'pages/info',
+                'pages/commons/fail',
             ],
             window: {
                 backgroundTextStyle: 'light',
@@ -77,7 +79,7 @@
                     }
                 ],
                 color: '#000000',
-                selectedColor: '#1AAD16'
+                selectedColor: '#00B5AD'
             }
         }
 
