@@ -20,10 +20,18 @@ const request = async (options, showLoading = true) => {
     }
 
     // 服务器异常后给与提示
+    if (response.statusCode === 429) {
+        wepy.showModal({
+            title: '提示',
+            content: '操作过于频繁，请1分钟后再试！'
+        })
+    }
+
+    // 服务器异常后给与提示
     if (response.statusCode === 500) {
         wepy.showModal({
             title: '提示',
-            content: response.data.msg || '服务器错误，请重试'
+            content: '服务器错误，请重试'
         })
     }
 
@@ -78,12 +86,6 @@ const login = async (params = {}) => {
         // 登录成功，记录 token 信息
         if (response.statusCode === 201 || response.statusCode === 200) {
             wepy.setStorageSync('access_token', response.data.meta.access_token)
-            if (response.data.school_id > 0) {
-                wepy.setStorageSync('school_id', response.data.school_id)
-            }
-            if (response.data.phone) {
-                wepy.setStorageSync('phone', response.data.phone)
-            }
             // wepy.setStorageSync('access_token_expired_at', new Date().getTime() + response.data.meta.expires_in * 1000)
         }
 

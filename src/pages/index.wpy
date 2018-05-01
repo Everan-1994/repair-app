@@ -122,7 +122,6 @@
                 // 测试 authRequest 接口
                 let userResponse = await api.authRequest('user', false)
                 this.userInfo = userResponse.data
-                this.$apply()
             } else {
                 // 获取用户微信信息
                 let userInfo = await api.getUserInfo()
@@ -137,9 +136,12 @@
                     // 获取 用户信息
                     let userResponse = await api.authRequest('user', false)
                     this.userInfo = userResponse.data
-                    this.$apply()
                 }
             }
+
+            this.$apply()
+            wepy.setStorageSync('school_id', this.userInfo.school_id)
+            wepy.setStorageSync('phone', this.userInfo.phone || 0)
         }
     }
 </script>

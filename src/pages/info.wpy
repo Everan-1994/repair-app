@@ -45,7 +45,7 @@
                             <view class="weui-label ts-text">当前选择</view>
                         </view>
                         <view class="weui-cell__hd">
-                            <picker @change="bindPickerChange" value="{{ index }}" range="{{ schools }}" range-key="school_name">
+                            <picker @change="bindPickerChange" value="{{ schools[index].id }}" range="{{ schools }}" range-key="school_name">
                                 <view class="weui-input">{{ schools[index].school_name }}</view>
                             </picker>
                         </view>
@@ -99,7 +99,7 @@
             navigationBarTitleText: '个人信息'
         }
         data = {
-            schools: [],
+            schools: [{'id': 0, 'school_name': '未绑定学校'}],
             index: 0,
             // 用户信息
             school: null,
@@ -161,11 +161,10 @@
                 })
 
                 // 表单错误
-                if (captchaResponse.statusCode === 422) {
-                    this.errors = captchaResponse.data.errors
-                    this.$apply()
+                if (captchaResponse.statusCode === 400) {
+                    this.errors = captchaResponse.data
                 }
-
+                console.log(this.errors)
                 // 记录 key 和过期时间，打开 modal
                 if (captchaResponse.statusCode === 200) {
                     this.captcha = {
@@ -176,8 +175,9 @@
 
                     // 关闭 modal
                     this.captchaModalHidden = false
-                    this.$apply()
                 }
+
+                this.$apply()
             } catch (err) {
                 wepy.showModal({
                     title: '提示',
@@ -239,8 +239,7 @@
 
                     // 验证码错误提示
                     if (codeResponse.statusCode === 401) {
-                        this.errors.captchaValue = ['图片验证码错误']
-                        this.$apply()
+                        this.errors.captchaValue = [`${codeResponse.data.captchaError}`]
                         await this.getCaptchaCode()
                         return false
                     }
@@ -260,13 +259,13 @@
                         this.codeDisabled = false
                         // 清空报错信息
                         this.errors = {}
-                        this.$apply()
                     }
+                    this.$apply()
                 } catch (err) {
                     console.log(err)
                     wepy.showModal({
                         title: '提示',
-                        content: '服务器错误，请联系管理员'
+                        content: '服务器错误，请稍后再试！'
                     })
                 }
             },
