@@ -1,6 +1,7 @@
 <style lang="less">
     .register-wrap {
         margin-top: 10px;
+        // border-top:1px solid #eee;
     }
     .error-message {
         color: #E64340;
@@ -12,6 +13,9 @@
         text-align: center;
         margin-bottom: 1em;
     }
+    .ts-text {
+        color: #1AAD16;
+    }
 </style>
 <template>
     <view class="page__bd">
@@ -19,46 +23,60 @@
             <form bindsubmit="submit">
                 <view class="weui-toptips weui-toptips_warn" wx:if="{{ errorMessage }}">{{ errorMessage }}</view>
 
-                <view class="weui-cells__title">申报类型</view>
+                <view class="weui-cells__title">☃ 申报类型</view>
                 <view class="page-section page-section-gap">
-                    <radio-group @change="radioChange">
+                    <radio-group @change="radioChange" name="type">
                         <label class="radio" wx:for="{{items}}" wx:key="value" style="margin-left:15px;">
                             <radio value="{{item.value}}" checked="{{item.checked}}"/> {{item.name}}
                         </label>
                     </radio-group>
                 </view>
 
-                <view class="weui-cells__title">申报地址</view>
+                <view class="weui-cells__title">☃ 申报区域</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input">
-                        <view class="weui-cell__bd">
-                            <input class="weui-input" placeholder="请输入申报地址" />
+                        <view class="weui-cell__hd">
+                            <view class="weui-label ts-text">当前选择</view>
+                        </view>
+                        <view class="weui-cell__hd">
+                            <picker @change="bindPickerChange" value="{{index}}" range="{{area}}" name="area">
+                                <view class="weui-input">{{area[index]}}</view>
+                            </picker>
                         </view>
                     </view>
                 </view>
 
-                <view class="weui-cells__title">申报事项</view>
+                <view class="weui-cells__title">☃ 申报地址</view>
+                <view class="weui-cells weui-cells_after-title">
+                    <view class="weui-cell weui-cell_input">
+                        <view class="weui-cell__bd">
+                            <input class="weui-input" placeholder="请输入申报地址" name="address" />
+                        </view>
+                    </view>
+                </view>
+
+                <view class="weui-cells__title">☃ 申报事项</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
-                            <textarea class="weui-textarea" placeholder="请简单描述申报事项" style="height: 3.3em" />
+                            <textarea class="weui-textarea" placeholder="请简单描述申报事项" style="height: 3.3em" name="content" />
                             <view class="weui-textarea-counter">0/200</view>
                         </view>
                     </view>
                 </view>
 
-                <view class="weui-cells__title">申报图片</view>
+                <view class="weui-cells__title">☃ 申报图片</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
                             <view class="weui-uploader">
                                 <view class="weui-uploader__hd">
-                                    <view class="weui-uploader__title">点击可预览选好的图片</view>
+                                    <view class="weui-uploader__title ts-text">点击可预览</view>
                                     <view class="weui-uploader__info">{{imageList.length}}/{{count[countIndex]}}</view>
                                 </view>
                                 <view class="weui-uploader__bd">
                                     <view class="weui-uploader__files">
-                                        <block for="{{imageList}}" key="k" index="index" item="image">
+                                        <block wx:for="{{imageList}}" wx:key="index" wx:for-item="image">
                                             <view class="weui-uploader__file">
                                                 <image class="weui-uploader__img" src="{{image}}" data-src="{{image}}" @tap="previewImage"></image>
                                             </view>
@@ -93,11 +111,13 @@
             navigationBarTitleText: '我要申报'
         }
         data = {
+            area: ['男生宿舍一栋', '男生宿舍二栋', '女生宿舍三栋'],
+            index: 0,
             items: [
                 {value: '1', name: '水务'},
-                {value: '2', name: '电务', checked: 'true'},
+                {value: '2', name: '电务'},
                 {value: '3', name: '木工'},
-                {value: '4', name: '其他'},
+                {value: '4', name: '其他', checked: 'true'},
             ],
             imageList: [],
             sourceTypeIndex: 2,
@@ -105,6 +125,19 @@
 
             countIndex: 2,
             count: [1, 2, 3]
+        }
+        async submit (e) {
+            let formData = e.detail.value
+            console.log(formData)
+            // 如果未填写内容，提示用户
+            if (!formData.content) {
+                wepy.showToast({
+                    title: '请填写内容',
+                    icon: 'none',
+                    duration: 2000
+                })
+                return
+            }
         }
         methods = {
             radioChange (e) {
@@ -117,10 +150,8 @@
                     sourceType: sourceType[this.data.sourceTypeIndex],
                     count: this.data.count[this.data.countIndex],
                 }).then(res => {
-                    this.imageList = res.tempFilePaths
-                    console.log(this.imageList)
-                    console.log(res.tempFilePaths)
-                    this.$apply()
+                    this.imageList = res.tempFilePaths;
+                    this.$apply();
                 })
             },
             previewImage (e) {
@@ -128,9 +159,13 @@
 
                 wepy.previewImage({
                     current: current,
-                    urls: this.data.imageList
+                    urls: this.imageList
                 })
-            }
+            },
+            bindPickerChange (e) {
+                this.index = e.detail.value;
+            },
+
         }
     }
 </script>

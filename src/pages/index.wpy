@@ -1,23 +1,82 @@
 <style>
-
+    .black-one {
+        border:1px solid #ffffff;
+        border-radius:5px;
+        margin:10px;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    }
+    .avatar-wrap {
+        position: relative;
+        margin-right: 10px;
+    }
+    .avatar {
+        width: 35px;
+        height: 35px;
+        display: block;
+        border-radius: 50%;
+    }
+    .top-title {
+        display:flex;
+        align-items:center;
+    }
+    .icons {
+        vertical-align: middle;
+        width: 25px;
+        height: 25px;
+    }
+    ._thumb {
+        width: 60px;
+        height: 60px;
+        vertical-align: top;
+    }
+    ._address {
+        vertical-align: middle;
+        width:15px;
+        height:15px;
+        margin-bottom:2px;
+    }
 </style>
 <template>
-    <view class="page__bd">
-        <view class="weui-panel weui-panel_access">
-            <view class="weui-panel__hd">最新报修</view>
-            <view class="weui-panel__bd">
-                <repeat for="{{ topics }}" key="id" index="index" item="topic">
-                    <navigator url="" class="weui-media-box weui-media-box_appmsg" hover-class="weui-cell_active">
-                        <view class="weui-media-box__hd weui-media-box__hd_in-appmsg">
-                            <image class="weui-media-box__thumb"
-                                   src="https://lccdn.phphub.org/uploads/avatars/3995_1516760409.jpg?imageView2/1/w/200/h/200"/>
+    <view class="page">
+        <view class="page__bd">
+            <repeat for="{{ topics }}" key="id" index="index" item="topic">
+                <navigator url="">
+                    <view class="black-one">
+                        <view class="weui-panel__hd top-title">
+                            <view class="weui-cell__hd avatar-wrap">
+                                <image class="avatar" src="https://lccdn.phphub.org/uploads/avatars/3995_1516760409.jpg?imageView2/1/w/200/h/200" />
+                            </view>
+                            <view class="weui-cell__bd">
+                                <view>南宫燕 <image src="./../images/boy.png" class="icons"></image></view>
+                            </view>
                         </view>
-                        <view class="weui-media-box__bd weui-media-box__bd_in-appmsg">
-                            <view class="weui-media-box__title">{{ topic.title }}</view>
-                            <view class="weui-media-box__desc">{{ topic.body }}</view>
+                        <view class="weui-panel__bd" style="padding: 10px 15px;">
+                            <navigator url="" class="weui-media-box weui-media-box_appmsg" hover-class="weui-cell_active" style="padding: 5px;">
+                                <view class="weui-media-box__hd weui-media-box__hd_in-appmsg">
+                                    <image class="_thumb" src="./../images/no-img.png" />
+                                </view>
+                                <view class="weui-media-box__bd weui-media-box__bd_in-appmsg">
+                                    <view class="weui-media-box__desc">
+                                        由各种物质组成的巨型球状天体，叫做星球。星球有一定的形状，有自己的运行轨道。
+                                        由各种物质组成的巨型球状天体，叫做星球。星球有一定的形状，有自己的运行轨道。
+                                    </view>
+                                    <view class="weui-media-box__info">
+                                        <view class="weui-media-box__info__meta">
+                                            <image class="_address" src="./../images/address.png" /> 西区教学楼一栋
+                                        </view>
+                                        <view class="weui-media-box__info__meta weui-media-box__info__meta_extra">
+                                            <image class="_address" src="./../images/time.png" />
+                                            1 小时前
+                                        </view>
+                                    </view>
+                                </view>
+                            </navigator>
                         </view>
-                    </navigator>
-                </repeat>
+                    </view>
+                </navigator>
+            </repeat>
+            <view class="weui-loadmore weui-loadmore_line">
+                <view class="weui-loadmore__tips weui-loadmore__tips_in-line">我是有底线的哦！~~~</view>
             </view>
         </view>
     </view>
