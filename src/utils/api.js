@@ -44,11 +44,10 @@ const request = async (options, showLoading = true) => {
 }
 
 // 带身份认证的请求
-const authRequest = async (options, showLoading = true, method = 'get') => {
+const authRequest = async (options, showLoading = true) => {
     if (typeof options === 'string') {
         options = {
-            url: options,
-            method: method
+            url: options
         }
     }
     // 从缓存中取出 Token

@@ -37,6 +37,7 @@
                         </view>
                     </view>
                 </view>
+                <view wx:if="{{ errors.phone_code }}" class="weui-cells__tips error-message">{{errors.phone_code[0]}}</view>
 
                 <view class="weui-cells__title">选择学校</view>
                 <view class="weui-cells weui-cells_after-title">
@@ -56,7 +57,7 @@
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
-                            <textarea class="weui-textarea" placeholder="请填写住址" style="height: 3.3em" name="content" />
+                            <textarea class="weui-textarea" placeholder="请填写住址" style="height: 3.3em" name="address" />
                             <view class="weui-textarea-counter">0/100</view>
                         </view>
                     </view>
@@ -101,6 +102,8 @@
         data = {
             schools: [{'id': 0, 'school_name': '未绑定学校'}],
             index: 0,
+            // 手机号
+            phone: null,
             // 手机号 input 是否 disabled
             phoneDisabled: false,
             // 验证码 input 是否 disabled
@@ -252,6 +255,11 @@
                         this.codeDisabled = false
                         // 清空报错信息
                         this.errors = {}
+
+                        wepy.showToast({
+                            title: '验证码已发送',
+                            icon: 'success'
+                        })
                     }
                     this.$apply()
                 } catch (err) {
@@ -295,22 +303,22 @@
                     formData.verification_key = this.verificationCode.key
 
                     let loginData = await wepy.login()
-                    let weappUser = await wepy.getUserInfo()
+                    let weappUser = await api.getUserInfo()
                     // 参数中增加code，用于获取 openid 绑定当前用户
                     formData.code = loginData.code
-                    formData.name = weappUser.nickname
+                    formData.name = weappUser.nickName
                     formData.avatar = weappUser.avatarUrl
                     formData.sex = weappUser.gender
 
-                    let updateInfoResponse = await api.request({
+                    let updateInfoResponse = await api.authRequest({
                         url: 'customer',
-                        method: 'put',
+                        method: 'PUT',
                         data: formData
                     })
 
                     // 验证码错误
                     if (updateInfoResponse.statusCode === 401) {
-                        this.errors.verification_code = ['验证码错误']
+                        this.errors.phone_code = ['验证码错误']
                     }
 
                     // 表单错误
@@ -318,8 +326,15 @@
                         this.errors = updateInfoResponse.data.errors
                     }
 
+                    if (updateInfoResponse.statusCode === 200) {
+                        wepy.showToast({
+                            title: '保存成功',
+                            icon: 'success'
+                        })
+                        this.resetInfo()
+                    }
+
                     this.$apply()
-                    
                 } catch (err) {
                     console.log(err)
                     wepy.showModal({
