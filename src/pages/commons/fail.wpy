@@ -1,5 +1,7 @@
 <style>
-
+    ._bottom {
+        margin-bottom:10px;
+    }
 </style>
 <template>
     <view class="page">
@@ -13,7 +15,10 @@
             </view>
             <view class="weui-msg__opr-area">
                 <view class="weui-btn-area">
-                    <button class="weui-btn" type="primary" @tap="toUser">完善信息 Go!~~</button>
+                    <navigator class="_bottom" url="/pages/info">
+                        <button class="weui-btn" type="primary" plain="true">这就去完善信息 #^_^#!!</button>
+                    </navigator>
+                    <button class="weui-btn" type="warn" plain="true" @tap="toIndex">朕暂时还不想 ≥▽≤!!</button>
                 </view>
             </view>
 
@@ -34,9 +39,9 @@
             navigationBarTitleText: '温馨提示'
         }
         methods = {
-            toUser () {
-                wepy.redirectTo({
-                    url: '/pages/info'
+            toIndex () {
+                wepy.switchTab({
+                    url: '/pages/index'
                 })
             }
         }

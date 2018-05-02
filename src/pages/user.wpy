@@ -35,7 +35,10 @@
                         <image class="avatar" src="{{ userInfo.avatar }}"/>
                     </view>
                     <view class="weui-cell__bd" style="margin-left:.5em;">
-                        <view>{{ userInfo.name }} <image src="./../images/boy.png" class="icons"></image></view>
+                        <view>
+                            {{ userInfo.name }}
+                            <image src="./../images/boy.png" class="icons"></image>
+                        </view>
                     </view>
                     <view class="weui-cell__ft weui-cell__ft_in-access"></view>
                 </navigator>
