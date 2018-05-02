@@ -8,7 +8,7 @@
 </style>
 <template>
     <view class="page__bd">
-        <view class="register-wrap">
+        <view class="updateInfo-wrap">
             <form bindsubmit="submit">
                 <view class="weui-toptips weui-toptips_warn" wx:if="{{ errorMessage }}">{{ errorMessage }}</view>
 
@@ -17,7 +17,7 @@
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input {{ errors.phone ? 'weui-cell_warn' : ''}}">
                         <view class="weui-cell__bd">
-                            <input disabled="{{ phoneDisabled }}" class="weui-input" type="number" placeholder="请输入手机号" @input="bindPhoneInput"/>
+                            <input disabled="{{ phoneDisabled }}" name="phone" class="weui-input" type="number" placeholder="请输入手机号" @input="bindPhoneInput"/>
                         </view>
                         <view class="weui-cell__ft">
                             <icon wx:if="{{ errors.phone }}" type="warn" size="23" color="#E64340"></icon>
@@ -33,7 +33,7 @@
                             <view class="weui-label ts-text">验证码</view>
                         </view>
                         <view class="weui-cell__hd">
-                            <input class="weui-input" type="number" placeholder="请填写验证码" name="code" />
+                            <input class="weui-input" type="number" placeholder="请填写验证码" name="phone_code" />
                         </view>
                     </view>
                 </view>
@@ -45,7 +45,7 @@
                             <view class="weui-label ts-text">当前选择</view>
                         </view>
                         <view class="weui-cell__hd">
-                            <picker @change="bindPickerChange" value="{{ schools[index].id }}" range="{{ schools }}" range-key="school_name">
+                            <picker @change="bindPickerChange" value="{{ schools[index].id }}" range="{{ schools }}" range-key="school_name" name="school_id">
                                 <view class="weui-input">{{ schools[index].school_name }}</view>
                             </picker>
                         </view>
@@ -101,10 +101,6 @@
         data = {
             schools: [{'id': 0, 'school_name': '未绑定学校'}],
             index: 0,
-            // 用户信息
-            school: null,
-            phone: null,
-            address: null,
             // 手机号 input 是否 disabled
             phoneDisabled: false,
             // 验证码 input 是否 disabled
@@ -133,9 +129,6 @@
 
             let school = await api.authRequest('getSchoolList', false)
             this.schools = school.data
-//            school.data.forEach(v => {
-//                this.schools.push(v.school_name)
-//            })
             this.$apply()
         }
 
@@ -164,7 +157,7 @@
                 if (captchaResponse.statusCode === 400) {
                     this.errors = captchaResponse.data
                 }
-                console.log(this.errors)
+
                 // 记录 key 和过期时间，打开 modal
                 if (captchaResponse.statusCode === 200) {
                     this.captcha = {
@@ -271,8 +264,70 @@
             },
             bindPickerChange (e) {
                 this.index = e.detail.value;
-                console.log(this.schools[this.index].id)
+                // console.log(this.schools[this.index].id)
             },
-        };
+            // 表单提交
+            async submit (e) {
+                this.errors = {}
+
+                // 检查验证码是否已发送
+                if (!this.verificationCode.key) {
+                    wepy.showToast({
+                        title: '请发送验证码',
+                        icon: 'none',
+                        duration: 2000
+                    })
+                    return false
+                }
+                // 检查验证码是否过期
+                if (new Date().getTime() > this.verificationCode.expiredAt) {
+                    wepy.showToast({
+                        title: '验证码已过期',
+                        icon: 'none',
+                        duration: 2000
+                    })
+                    this.resetInfo()
+                    return false
+                }
+
+                try {
+                    let formData = e.detail.value
+                    formData.verification_key = this.verificationCode.key
+
+                    let loginData = await wepy.login()
+                    let weappUser = await wepy.getUserInfo()
+                    // 参数中增加code，用于获取 openid 绑定当前用户
+                    formData.code = loginData.code
+                    formData.name = weappUser.nickname
+                    formData.avatar = weappUser.avatarUrl
+                    formData.sex = weappUser.gender
+
+                    let updateInfoResponse = await api.request({
+                        url: 'customer',
+                        method: 'put',
+                        data: formData
+                    })
+
+                    // 验证码错误
+                    if (updateInfoResponse.statusCode === 401) {
+                        this.errors.verification_code = ['验证码错误']
+                    }
+
+                    // 表单错误
+                    if (updateInfoResponse.statusCode === 422) {
+                        this.errors = updateInfoResponse.data.errors
+                    }
+
+                    this.$apply()
+                    
+                } catch (err) {
+                    console.log(err)
+                    wepy.showModal({
+                        title: '提示',
+                        content: '服务器错误，请稍后再试！'
+                    })
+                }
+            }
+        }
     }
 </script>
