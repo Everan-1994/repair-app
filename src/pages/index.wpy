@@ -1,39 +1,45 @@
 <style>
     .black-one {
-        border:1px solid #ffffff;
-        border-radius:5px;
-        margin:10px;
+        border: 1px solid #ffffff;
+        border-radius: 5px;
+        margin: 10px;
         box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.15);
     }
+
     .avatar-wrap {
         position: relative;
         margin-right: 10px;
     }
+
     .avatar {
         width: 35px;
         height: 35px;
         display: block;
         border-radius: 50%;
     }
+
     .top-title {
-        display:flex;
-        align-items:center;
+        display: flex;
+        align-items: center;
     }
+
     .icons {
         vertical-align: middle;
         width: 25px;
         height: 25px;
     }
+
     ._thumb {
         width: 60px;
         height: 60px;
         vertical-align: top;
     }
+
     ._address {
         vertical-align: middle;
-        width:15px;
-        height:15px;
-        margin-bottom:2px;
+        width: 15px;
+        height: 15px;
+        margin-bottom: 2px;
     }
 </style>
 <template>
@@ -44,16 +50,20 @@
                     <view class="black-one">
                         <view class="weui-panel__hd top-title">
                             <view class="weui-cell__hd avatar-wrap">
-                                <image class="avatar" src="https://lccdn.phphub.org/uploads/avatars/3995_1516760409.jpg?imageView2/1/w/200/h/200" />
+                                <image class="avatar"
+                                       src="https://lccdn.phphub.org/uploads/avatars/3995_1516760409.jpg?imageView2/1/w/200/h/200"/>
                             </view>
                             <view class="weui-cell__bd">
-                                <view>南宫燕 <image src="./../images/boy.png" class="icons"></image></view>
+                                <view>南宫燕
+                                    <image src="./../images/boy.png" class="icons"></image>
+                                </view>
                             </view>
                         </view>
                         <view class="weui-panel__bd" style="padding: 10px 15px;">
-                            <navigator url="" class="weui-media-box weui-media-box_appmsg" hover-class="weui-cell_active" style="padding: 5px;">
+                            <navigator url="" class="weui-media-box weui-media-box_appmsg"
+                                       hover-class="weui-cell_active" style="padding: 5px;">
                                 <view class="weui-media-box__hd weui-media-box__hd_in-appmsg">
-                                    <image class="_thumb" src="./../images/no-img.png" />
+                                    <image class="_thumb" src="./../images/no-img.png"/>
                                 </view>
                                 <view class="weui-media-box__bd weui-media-box__bd_in-appmsg">
                                     <view class="weui-media-box__desc">
@@ -62,11 +72,12 @@
                                     </view>
                                     <view class="weui-media-box__info">
                                         <view class="weui-media-box__info__meta">
-                                            <image class="_address" src="./../images/address.png" /> 西区教学楼一栋
+                                            <image class="_address" src="./../images/address.png"/>
+                                            西区教学楼一栋
                                         </view>
                                         <view class="weui-media-box__info__meta weui-media-box__info__meta_extra">
-                                            <image class="_address" src="./../images/time.png" />
-                                            1 小时前
+                                            <image class="_address" src="./../images/time.png"/>
+                                            {{ topic.time_diff }}
                                         </view>
                                     </view>
                                 </view>
@@ -85,35 +96,46 @@
 <script>
     import wepy from 'wepy'
     import api from '@/utils/api'
+    import util from '@/utils/util'
 
     export default class Index extends wepy.page {
         // 可用于页面模板绑定的数据
         data = {
             userInfo: null,
-            topics: [
+            topics: []
+        }
+
+        async onShow() {
+            let topics = [
                 {
                     id: 1,
                     title: '测试1',
-                    body: 'repair 测试内容1'
+                    body: 'repair 测试内容1',
+                    time: '2018-04-29 15:34:49'
                 },
                 {
                     id: 2,
                     title: '测试2',
-                    body: 'repair 测试内容2'
+                    body: 'repair 测试内容2',
+                    time: '2018-05-2 15:34:49'
                 },
                 {
                     id: 3,
                     title: '测试3',
-                    body: 'repair 测试内容3'
+                    body: 'repair 测试内容3',
+                    time: '2017-04-29 15:34:49'
                 },
                 {
                     id: 4,
                     title: '测试4',
-                    body: 'repair 测试内容4'
+                    body: 'repair 测试内容4',
+                    time: '2018-04-29 08:34:49'
                 }
             ]
-        }
-        async onShow() {
+            topics.forEach(topic => {
+                topic.time_diff = util.diffForHumans(topic.time)
+            })
+            this.topics = topics;
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
 

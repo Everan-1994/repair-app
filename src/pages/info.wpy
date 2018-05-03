@@ -18,7 +18,7 @@
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input {{ errors.phone ? 'weui-cell_warn' : ''}}">
                         <view class="weui-cell__bd">
-                            <input disabled="{{ phoneDisabled }}" value="{{ phone }}" name="phone" class="weui-input" type="number"
+                            <input disabled="{{ phoneDisabled }}" value="{{ phone }}" class="weui-input" type="number"
                                    placeholder="请输入手机号" @input="bindPhoneInput"/>
                         </view>
                         <view class="weui-cell__ft">
@@ -46,26 +46,29 @@
                 <view wx:if="{{ errors.phone_code }}" class="weui-cells__tips error-message">{{errors.phone_code[0]}}
                 </view>
 
-                <view class="weui-cells__title">选择学校</view>
+                <view class="weui-cells__title">选择组织</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input">
                         <view class="weui-cell__hd">
-                            <view class="weui-label ts-text">当前选择</view>
+                            <view class="weui-label ts-text">{{ hasSchool ? '当前绑定' : '当前选择' }}</view>
                         </view>
                         <view class="weui-cell__hd">
-                            <picker @change="bindPickerChange" value="{{ schools[index].id }}" range="{{ schools }}"
-                                    range-key="school_name" name="school_id">
+                            <picker @change="bindPickerChange" value="{{ index }}" range="{{ schools }}"
+                                    range-key="school_name">
                                 <view class="weui-input">{{ schools[index].school_name }}</view>
                             </picker>
                         </view>
                     </view>
+                </view>
+                <view wx:if="{{ errors.school }}" class="weui-cells__tips error-message">{{errors.school[0]}}
                 </view>
 
                 <view class="weui-cells__title">我的住址</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
-                            <textarea class="weui-textarea" placeholder="请填写住址" value="{{ address }}" style="height: 3.3em" name="address"/>
+                            <textarea class="weui-textarea" placeholder="请填写住址" value="{{ address }}"
+                                      style="height: 3.3em" name="address" @input="bindTextInput" maxlength="100"/>
                             <view class="weui-textarea-counter">0/100</view>
                         </view>
                     </view>
@@ -77,10 +80,8 @@
             </form>
 
             <!-- 验证码输入模态框 -->
-            <modal class="modal" hidden="{{ captchaModalHidden }}" no-cancel bindconfirm="sendVerificationCode">
-                <view wx:if="{{ errors.captchaValue }}" class="weui-cells__tips error-message">{{ errors.captchaValue[0]
-                    }}
-                </view>
+            <modal class="modal" title="发送验证码" hidden="{{ captchaModalHidden }}" bindcancel="closeModel"
+                   bindconfirm="sendVerificationCode">
                 <view class="weui-cell weui-cell_input weui-cell_vcode">
                     <view class="weui-cell__bd">
                         <input class="weui-input" placeholder="图片验证码" @input="bindCaptchaCodeInput"/>
@@ -89,6 +90,8 @@
                         <image class="weui-vcode-img" @tap="tapCaptchaCode" src="{{ captcha.imageContent }}"
                                style="width: 100px"></image>
                     </view>
+                </view>
+                <view wx:if="{{ errors.captchaValue }}" class="weui-cells__tips error-message">{{errors.captchaValue[0]}}
                 </view>
             </modal>
 
@@ -104,17 +107,21 @@
     import Footer from './commons/footer'
 
     export default class Info extends wepy.page {
-        components = {
-            Footer,
-        }
         config = {
             navigationBarTitleText: '个人信息'
         }
+        components = {
+            Footer,
+        }
         data = {
-            schools: [{'id': 0, 'school_name': '未绑定学校'}],
+            schools: [{'id': 0, 'school_name': '请选择组织'}],
             index: 0,
             // 手机号
             phone: null,
+            // 学校id
+            school_id: null,
+            // 选中的学校是否和缓存中的一致
+            hasSchool: false,
             // 地址
             address: null,
             // 手机号 input 是否 disabled
@@ -130,7 +137,9 @@
             // 表单错误
             errors: {},
             // 短信验证码 key 及过期时间
-            verificationCode: {}
+            verificationCode: {},
+            // errorMessage 错误
+            errorMessage: null
         }
 
         async onShow() {
@@ -139,15 +148,37 @@
             // Token 存在则说明已登录
             if (accessToken) {
                 // authRequest 接口
-                let userInfo = await api.authRequest('user', false)
+                let userInfo = await api.authRequest('user', true)
 
-                this.index = userInfo.data.school_id
+                this.school_id = userInfo.data.school_id
                 this.phone = userInfo.data.phone
                 this.address = userInfo.data.address
             }
 
             let school = await api.authRequest('getSchoolList', false)
-            this.schools = school.data
+            let data = school.data
+
+            if (this.school_id > 0) {
+
+                this.schools = data
+
+                // 设置 picker 选中
+                this.schools.forEach((v, index) => {
+                    if (v.id == this.school_id) {
+                        this.index = index
+                    }
+                })
+
+                let school = wepy.getStorageSync('school_id')
+                if (this.school_id == school) {
+                    this.hasSchool = true
+                }
+
+            } else {
+                data.forEach(v => {
+                    this.schools.push(v)
+                })
+            }
 
             this.$apply()
         }
@@ -194,7 +225,7 @@
             } catch (err) {
                 wepy.showModal({
                     title: '提示',
-                    content: '服务器错误'
+                    content: '服务器错误，请稍后再试！'
                 })
             }
         }
@@ -207,9 +238,19 @@
             this.captcha = {}
             this.verificationCode = {}
             this.errors = {}
+            this.errorMessage = null
         }
 
         methods = {
+            // 关闭 modal
+            closeModel() {
+                this.captchaModalHidden = true
+                this.errors.captchaValue = null
+            },
+            // 绑定文本框输入
+            bindTextInput(e) {
+                console.log(e.detail.value)
+            },
             // 绑定手机输入
             bindPhoneInput(e) {
                 this.phone = e.detail.value
@@ -275,8 +316,9 @@
 
                         wepy.showToast({
                             title: '验证码已发送',
-                            icon: 'success'
-                        })
+                            icon: 'success',
+                            duration: 2000
+                        });
                     }
                     this.$apply()
                 } catch (err) {
@@ -289,13 +331,18 @@
             },
             bindPickerChange(e) {
                 this.index = e.detail.value;
-                console.log(e.detail.value)
+                this.school_id = this.schools[this.index].id
+                let school_id = wepy.getStorageSync('school_id')
+
+                if (this.school_id !== school_id) {
+                    this.hasSchool = false
+                }
+                this.$apply()
             },
             // 表单提交
             async submit(e) {
                 this.errors = {}
-
-                let catchPhone = wepy.getStorageSync('phone')
+                // this.errorMessage = null
 
                 // 检查手机号是否已填
                 if (!this.phone) {
@@ -303,26 +350,31 @@
                     return false
                 }
 
-                if (this.phone !== catchPhone) {
-                    // 检查验证码是否已发送
-                    if (!this.verificationCode.key) {
-                        wepy.showToast({
-                            title: '请发送验证码',
-                            icon: 'none',
-                            duration: 2000
-                        })
-                        return false
-                    }
-                    // 检查验证码是否过期
-                    if (new Date().getTime() > this.verificationCode.expiredAt) {
-                        wepy.showToast({
-                            title: '验证码已过期',
-                            icon: 'none',
-                            duration: 2000
-                        })
-                        this.resetInfo()
-                        return false
-                    }
+                // 检查验证码是否已发送
+                if (!this.verificationCode.key) {
+                    // this.errorMessage = '请发送验证码'
+                    wepy.showToast({
+                        title: '请发送验证码',
+                        icon: 'none',
+                        duration: 2000
+                    })
+                    return false
+                }
+                // 检查验证码是否过期
+                if (new Date().getTime() > this.verificationCode.expiredAt) {
+                    // this.errorMessage = '验证码已过期'
+                    wepy.showToast({
+                        title: '验证码已过期',
+                        icon: 'none',
+                        duration: 2000
+                    })
+                    this.resetInfo()
+                    return false
+                }
+                // 检查是否已选组织
+                if (this.school_id == 0) {
+                    this.errors.school = ['请选择组织']
+                    return false
                 }
 
                 try {
@@ -331,11 +383,19 @@
 
                     let loginData = await wepy.login()
                     let weappUser = await api.getUserInfo()
+
                     // 参数中增加code，用于获取 openid 绑定当前用户
                     formData.code = loginData.code
                     formData.name = weappUser.nickName
                     formData.avatar = weappUser.avatarUrl
                     formData.sex = weappUser.gender
+                    formData.school_id = this.school_id
+
+                    let changePhone = wepy.getStorageSync('phone')
+
+                    if (this.phone !== changePhone) {
+                        formData.phone = changePhone
+                    }
 
                     let updateInfoResponse = await api.authRequest({
                         url: 'customer',
@@ -354,9 +414,11 @@
                     }
 
                     if (updateInfoResponse.statusCode === 200) {
+
                         wepy.showToast({
                             title: '保存成功',
-                            icon: 'success'
+                            icon: 'success',
+                            duration: 2000
                         })
 
                         wepy.setStorageSync('school_id', this.schools[this.index].id)
