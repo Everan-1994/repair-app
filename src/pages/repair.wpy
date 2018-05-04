@@ -3,9 +3,11 @@
         margin-top: 10px;
         // border-top:1px solid #eee;
     }
+
     .error-message {
         color: #E64340;
     }
+
     .bx_title {
         background-color: #fff;
         font-size: 20px;
@@ -13,6 +15,7 @@
         text-align: center;
         margin-bottom: 1em;
     }
+
     .ts-text {
         color: #1AAD16;
     }
@@ -27,7 +30,8 @@
                 <view class="page-section page-section-gap">
                     <radio-group @change="radioChange" name="type">
                         <label class="radio" wx:for="{{items}}" wx:key="value" style="margin-left:15px;">
-                            <radio value="{{item.value}}" checked="{{item.checked}}"/> {{item.name}}
+                            <radio value="{{item.value}}" checked="{{item.checked}}"/>
+                            {{item.name}}
                         </label>
                     </radio-group>
                 </view>
@@ -39,8 +43,8 @@
                             <view class="weui-label ts-text">当前选择</view>
                         </view>
                         <view class="weui-cell__hd">
-                            <picker @change="bindPickerChange" value="{{ index }}" range="{{ area }}" name="area">
-                                <view class="weui-input">{{ area[index] }}</view>
+                            <picker @change="bindPickerChange" value="{{ index }}" range="{{ area }}" range-key="name">
+                                <view class="weui-input">{{ area[index].name }}</view>
                             </picker>
                         </view>
                     </view>
@@ -50,19 +54,25 @@
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input">
                         <view class="weui-cell__bd">
-                            <input class="weui-input" placeholder="请输入申报地址" name="address" />
+                            <input class="weui-input" placeholder="请输入申报地址" name="address"
+                                   value="{{ userInfo.address }}"/>
                         </view>
                     </view>
+                </view>
+                <view wx:if="{{ errors.address }}" class="weui-cells__tips error-message">{{errors.address[0]}}
                 </view>
 
                 <view class="weui-cells__title">☃ 申报事项</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
-                            <textarea class="weui-textarea" placeholder="请简单描述申报事项" style="height: 3.3em" name="content" />
-                            <view class="weui-textarea-counter">0/200</view>
+                            <textarea @input="bindTextareaChange" class="weui-textarea" placeholder="请简单描述申报事项"
+                                      style="height: 3.3em" name="contents" maxlength="200"/>
+                            <view class="weui-textarea-counter">{{ textLen }}/200</view>
                         </view>
                     </view>
+                </view>
+                <view wx:if="{{ errors.content }}" class="weui-cells__tips error-message">{{errors.content[0]}}
                 </view>
 
                 <view class="weui-cells__title">☃ 申报图片</view>
@@ -72,13 +82,15 @@
                             <view class="weui-uploader">
                                 <view class="weui-uploader__hd">
                                     <view class="weui-uploader__title ts-text">点击可预览</view>
-                                    <view class="weui-uploader__info">{{imageList.length}}/{{count[countIndex]}}</view>
+                                    <view class="weui-uploader__info">{{ imageList.length }}/{{ count[countIndex] }}
+                                    </view>
                                 </view>
                                 <view class="weui-uploader__bd">
                                     <view class="weui-uploader__files">
-                                        <block wx:for="{{imageList}}" wx:key="index" wx:for-item="image">
+                                        <block wx:for="{{ imageList }}" wx:key="index" wx:for-item="image">
                                             <view class="weui-uploader__file">
-                                                <image class="weui-uploader__img" src="{{image}}" data-src="{{image}}" @tap="previewImage"></image>
+                                                <image class="weui-uploader__img" src="{{ image }}"
+                                                       data-src="{{ image }}" @tap="previewImage"></image>
                                             </view>
                                         </block>
                                     </view>
@@ -104,15 +116,18 @@
     import wepy from 'wepy'
     import api from '@/utils/api'
 
-    var sourceType = [ ['camera'], ['album'], ['camera', 'album'] ]
+    var sourceType = [['camera'], ['album'], ['camera', 'album']]
 
     export default class Repair extends wepy.page {
         config = {
-            navigationBarTitleText: '我要申报'
+            navigationBarTitleText: '我要申报',
+            enablePullDownRefresh: true
         }
         data = {
-            area: ['男生宿舍一栋', '男生宿舍二栋', '女生宿舍三栋'],
+            area: [],
+            area_id: 0,
             index: 0,
+            textLen: 0,
             items: [
                 {value: '1', name: '水务'},
                 {value: '2', name: '电务'},
@@ -120,25 +135,70 @@
                 {value: '4', name: '其他', checked: 'true'},
             ],
             imageList: [],
+            imagesUrl: [], // 上传返回的 url
             sourceTypeIndex: 2,
             sourceType: ['拍照', '相册', '拍照或相册'],
             countIndex: 2,
             count: [1, 2, 3],
-            userInfo: null
+            userInfo: null,
+            errors: {}
         }
-        async submit (e) {
+
+        async submit(e) {
+            this.errors = {}; // 重置错误
+
             let formData = e.detail.value
             console.log(formData)
-            // 如果未填写内容，提示用户
-            if (!formData.content) {
-                wepy.showToast({
-                    title: '请填写内容',
-                    icon: 'none',
-                    duration: 2000
-                })
-                return
+            if (!formData.address) {
+                this.errors.address = ['敢不敢填一下地址？']
+                return false
             }
+            // 如果未填写内容，提示用户
+            if (!formData.contents) {
+                this.errors.content = ['敢不敢来点刺激的描述？']
+                return false
+            }
+
+            try {
+                // 上传图片
+                if (this.imageList.length > 0) {
+                    for (let path of this.imageList) {
+                        let result = await api.updateFile({
+                            url: 'upload/image',
+                            method: 'POST',
+                            name: 'images',
+                            filePath: path
+                        }, false)
+                        let res = JSON.parse(result.data)
+                        this.imagesUrl.push(res.url)
+                    }
+                }
+                // 提交申报
+                let formData = e.detail.value
+                formData.area_id = this.area_id || this.area[this.index].id
+                formData.school_id = this.userInfo.school_id || wepy.getStorageSync('school_id')
+                if (this.imagesUrl.length > 0) {
+                    formData.imagesUrl = this.imagesUrl
+                }
+
+                let repairResponse = await api.authRequest({
+                    url: 'order',
+                    method: 'POST',
+                    data: formData
+                })
+
+                console.log(repairResponse)
+
+            } catch (err) {
+                console.log(err)
+                wepy.showModal({
+                    title: '提示',
+                    content: '服务器错误，请重试！'
+                })
+            }
+
         }
+
         async onShow() {
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
@@ -152,14 +212,32 @@
                         url: '/pages/commons/fail'
                     })
                 }
-                this.$apply()
             }
+
+            // 获取区域
+            let area = await api.authRequest({
+                url: 'area/select',
+                method: 'GET',
+                data: {
+                    school_id: wepy.getStorageSync('school_id')
+                }
+            }, true)
+            this.area = area.data
+            this.$apply()
         }
+
+        async onPullDownRefresh() {
+            wepy.stopPullDownRefresh()
+        }
+
         methods = {
             radioChange (e) {
                 this.items.forEach(v => {
                     v.checked = v.value === e.detail.value;
                 });
+            },
+            bindTextareaChange (e) {
+                this.textLen = e.detail.value.length
             },
             chooseImage () {
                 wepy.chooseImage({
@@ -167,7 +245,6 @@
                     count: this.data.count[this.data.countIndex],
                 }).then(res => {
                     this.imageList = res.tempFilePaths;
-                    this.$apply();
                 })
             },
             previewImage (e) {
@@ -180,8 +257,17 @@
             },
             bindPickerChange (e) {
                 this.index = e.detail.value;
+                this.area_id = this.area[this.index].id
             },
-
+            resetData () {
+                this.area = []
+                this.area_id = 0
+                this.index = 0
+                this.textLen = 0
+                this.imageList = []
+                this.imagesUrl = []
+                this.errors = {}
+            }
         }
     }
 </script>

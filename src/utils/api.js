@@ -97,9 +97,37 @@ const login = async (params = {}) => {
     }
 }
 
+const updateFile = async (options = {}, showLoading = true) => {
+    // 显示loading
+    if (showLoading) {
+        wepy.showLoading({title: '上传中'})
+    }
+
+    // 获取 token
+    let accessToken = wepy.getStorageSync('access_token')
+
+    // 拼接url
+    options.url = host + '/' + options.url
+    let header = options.header || {}
+    // 将 token 设置在 header 中
+    header.Authorization = accessToken
+    options.header = header
+
+    // 上传文件
+    let response = await wepy.uploadFile(options)
+
+    if (showLoading) {
+        // 隐藏 loading
+        wepy.hideLoading()
+    }
+
+    return response
+}
+
 export default {
     request,
     authRequest,
     login,
     getUserInfo,
+    updateFile,
 }

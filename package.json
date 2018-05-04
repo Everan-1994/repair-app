@@ -20,7 +20,7 @@
     "moment": "^2.22.1",
     "promise-polyfill": "^7.1.2",
     "redux": "^3.7.2",
-    "redux-actions": "^2.2.1",
+    "redux-actions": "^2.3.2",
     "redux-promise": "^0.5.3",
     "util": "^0.10.3",
     "wepy": "^1.6.0",

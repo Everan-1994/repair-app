@@ -69,7 +69,7 @@
                         <view class="weui-cell__bd">
                             <textarea class="weui-textarea" placeholder="请填写住址" value="{{ address }}"
                                       style="height: 3.3em" name="address" @input="bindTextInput" maxlength="100"/>
-                            <view class="weui-textarea-counter">0/100</view>
+                            <view class="weui-textarea-counter">{{ textLen }}/100</view>
                         </view>
                     </view>
                 </view>
@@ -116,6 +116,7 @@
         data = {
             schools: [{'id': 0, 'school_name': '请选择组织'}],
             index: 0,
+            textLen: 0,
             // 手机号
             phone: null,
             // 学校id
@@ -123,7 +124,7 @@
             // 选中的学校是否和缓存中的一致
             hasSchool: false,
             // 地址
-            address: null,
+            address: '',
             // 手机号 input 是否 disabled
             phoneDisabled: false,
             // 验证码 input 是否 disabled
@@ -153,6 +154,7 @@
                 this.school_id = userInfo.data.school_id
                 this.phone = userInfo.data.phone
                 this.address = userInfo.data.address
+                this.textLen = this.address.length
             }
 
             let school = await api.authRequest('getSchoolList', false)
@@ -249,7 +251,7 @@
             },
             // 绑定文本框输入
             bindTextInput(e) {
-                console.log(e.detail.value)
+                this.textLen = e.detail.value.length
             },
             // 绑定手机输入
             bindPhoneInput(e) {
