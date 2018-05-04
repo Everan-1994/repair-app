@@ -67,8 +67,7 @@
                                 </view>
                                 <view class="weui-media-box__bd weui-media-box__bd_in-appmsg">
                                     <view class="weui-media-box__desc">
-                                        由各种物质组成的巨型球状天体，叫做星球。星球有一定的形状，有自己的运行轨道。
-                                        由各种物质组成的巨型球状天体，叫做星球。星球有一定的形状，有自己的运行轨道。
+                                        {{ topic.content }}
                                     </view>
                                     <view class="weui-media-box__info">
                                         <view class="weui-media-box__info__meta">
@@ -102,40 +101,21 @@
         // 可用于页面模板绑定的数据
         data = {
             userInfo: null,
-            topics: []
+            topics: [],
+            page: 1
         }
-
-        async onShow() {
-            let topics = [
-                {
-                    id: 1,
-                    title: '测试1',
-                    body: 'repair 测试内容1',
-                    time: '2018-04-29 15:34:49'
-                },
-                {
-                    id: 2,
-                    title: '测试2',
-                    body: 'repair 测试内容2',
-                    time: '2018-05-2 15:34:49'
-                },
-                {
-                    id: 3,
-                    title: '测试3',
-                    body: 'repair 测试内容3',
-                    time: '2017-04-29 15:34:49'
-                },
-                {
-                    id: 4,
-                    title: '测试4',
-                    body: 'repair 测试内容4',
-                    time: '2018-04-29 08:34:49'
+        async getOrder () {
+            let result = await api.authRequest({
+                url: 'order',
+                data: {
+                    school_id: this.userInfo.school_id,
+                    page: this.page
                 }
-            ]
-            topics.forEach(topic => {
-                topic.time_diff = util.diffForHumans(topic.time)
-            })
-            this.topics = topics;
+            }, false)
+            return result.data
+        }
+        async onShow() {
+
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
 
@@ -160,6 +140,14 @@
                     this.userInfo = userResponse.data
                 }
             }
+
+            let topics = await this.getOrder()
+
+            topics.forEach(topic => {
+                topic.time_diff = util.diffForHumans(topic.created_at)
+            })
+
+            this.topics = topics;
 
             this.$apply()
             wepy.setStorageSync('school_id', this.userInfo.school_id)

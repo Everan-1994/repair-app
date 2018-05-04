@@ -26,7 +26,7 @@
             <form bindsubmit="submit">
                 <view class="weui-toptips weui-toptips_warn" wx:if="{{ errorMessage }}">{{ errorMessage }}</view>
 
-                <view class="weui-cells__title">☃ 申报类型</view>
+                <view class="weui-cells__title">1、申报类型</view>
                 <view class="page-section page-section-gap">
                     <radio-group @change="radioChange" name="type">
                         <label class="radio" wx:for="{{items}}" wx:key="value" style="margin-left:15px;">
@@ -36,7 +36,7 @@
                     </radio-group>
                 </view>
 
-                <view class="weui-cells__title">☃ 申报区域</view>
+                <view class="weui-cells__title">2、申报区域</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input">
                         <view class="weui-cell__hd">
@@ -50,7 +50,7 @@
                     </view>
                 </view>
 
-                <view class="weui-cells__title">☃ 申报地址</view>
+                <view class="weui-cells__title">3、申报地址</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell weui-cell_input">
                         <view class="weui-cell__bd">
@@ -62,12 +62,12 @@
                 <view wx:if="{{ errors.address }}" class="weui-cells__tips error-message">{{errors.address[0]}}
                 </view>
 
-                <view class="weui-cells__title">☃ 申报事项</view>
+                <view class="weui-cells__title">4、申报事项</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
                             <textarea @input="bindTextareaChange" class="weui-textarea" placeholder="请简单描述申报事项"
-                                      style="height: 3.3em" name="contents" maxlength="200"/>
+                                      style="height: 3.3em" value="{{ contents }}" maxlength="200"/>
                             <view class="weui-textarea-counter">{{ textLen }}/200</view>
                         </view>
                     </view>
@@ -75,7 +75,7 @@
                 <view wx:if="{{ errors.content }}" class="weui-cells__tips error-message">{{errors.content[0]}}
                 </view>
 
-                <view class="weui-cells__title">☃ 申报图片</view>
+                <view class="weui-cells__title">5、申报图片</view>
                 <view class="weui-cells weui-cells_after-title">
                     <view class="weui-cell">
                         <view class="weui-cell__bd">
@@ -104,6 +104,9 @@
                 </view>
 
                 <view class="weui-btn-area">
+                    <button class="weui-btn" type="warn" wx:if="{{ imageList.length > 0 }}" @tap="clearAllImage">清除所选图片</button>
+                </view>
+                <view class="weui-btn-area">
                     <button class="weui-btn" type="primary" formType="submit">提交申报</button>
                 </view>
             </form>
@@ -127,6 +130,7 @@
             area: [],
             area_id: 0,
             index: 0,
+            contents: null,
             textLen: 0,
             items: [
                 {value: '1', name: '水务'},
@@ -148,13 +152,12 @@
             this.errors = {}; // 重置错误
 
             let formData = e.detail.value
-            console.log(formData)
             if (!formData.address) {
                 this.errors.address = ['敢不敢填一下地址？']
                 return false
             }
             // 如果未填写内容，提示用户
-            if (!formData.contents) {
+            if (!this.contents) {
                 this.errors.content = ['敢不敢来点刺激的描述？']
                 return false
             }
@@ -175,6 +178,7 @@
                 }
                 // 提交申报
                 let formData = e.detail.value
+                formData.contents = this.contents
                 formData.area_id = this.area_id || this.area[this.index].id
                 formData.school_id = this.userInfo.school_id || wepy.getStorageSync('school_id')
                 if (this.imagesUrl.length > 0) {
@@ -185,9 +189,23 @@
                     url: 'order',
                     method: 'POST',
                     data: formData
-                })
+                }, true)
 
-                console.log(repairResponse)
+                if (repairResponse.statusCode == 200) {
+                    wx.showModal({
+                        title: '温馨提示',
+                        content: '你的申报已经提交至后勤处，请耐心等待审核。',
+                        showCancel: false,
+                        complete: () => {
+                            this.textLen = 0
+                            this.imageList = []
+                            this.imagesUrl = []
+                            this.contents = null
+
+                            this.$apply()
+                        }
+                    })
+                }
 
             } catch (err) {
                 console.log(err)
@@ -231,12 +249,17 @@
         }
 
         methods = {
+            clearAllImage () {
+                this.imageList = []
+                this.$apply()
+            },
             radioChange (e) {
                 this.items.forEach(v => {
                     v.checked = v.value === e.detail.value;
                 });
             },
             bindTextareaChange (e) {
+                this.contents = e.detail.value
                 this.textLen = e.detail.value.length
             },
             chooseImage () {
@@ -259,15 +282,6 @@
                 this.index = e.detail.value;
                 this.area_id = this.area[this.index].id
             },
-            resetData () {
-                this.area = []
-                this.area_id = 0
-                this.index = 0
-                this.textLen = 0
-                this.imageList = []
-                this.imagesUrl = []
-                this.errors = {}
-            }
         }
     }
 </script>
