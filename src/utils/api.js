@@ -1,7 +1,5 @@
 import wepy from 'wepy'
-
-// 服务器接口地址
-const host = 'http://repair-api.wei/api'
+import {dev_path} from '@/utils/path'
 
 // 普通请求
 const request = async (options, showLoading = true) => {
@@ -10,7 +8,7 @@ const request = async (options, showLoading = true) => {
         wepy.showLoading({title: '加载中'})
     }
     // 拼接请求地址
-    options.url = `${host}/${options.url}`
+    options.url = `${dev_path}/${options.url}`
     // 调用小程序的 request 方法
     let response = await wepy.request(options)
 
@@ -107,7 +105,7 @@ const updateFile = async (options = {}, showLoading = true) => {
     let accessToken = wepy.getStorageSync('access_token')
 
     // 拼接url
-    options.url = host + '/' + options.url
+    options.url = `${dev_path}/${options.url}`
     let header = options.header || {}
     // 将 token 设置在 header 中
     header.Authorization = accessToken
