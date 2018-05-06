@@ -53,20 +53,20 @@
     <view class="page">
         <view class="page__bd">
             <repeat for="{{ orders }}" key="index" index="index" item="order">
-                <navigator url="">
+                <navigator url="/pages/show?id={{ order.id }}">
                     <view class="black-one">
                         <view class="weui-panel__hd top-title">
                             <view class="weui-cell__hd avatar-wrap">
                                 <image class="avatar" src="{{ order.user.avatar }}"/>
                             </view>
-                            <view class="weui-cell__bd">
+                            <view class="weui-cell__bd _text" style="width: 50%;">
                                 <view>{{ order.user.name }}
                                     <image wx:if="{{ order.user.sex == 1 }}" src="./../images/boy.png"
                                            class="icons"></image>
                                     <image wx:else src="./../images/girl.png" class="icons"></image>
                                 </view>
                             </view>
-                            <view class="weui-cell__bd">
+                            <view class="weui-cell__bd _text" style="width: 50%;">
                                 <image class="icons" src="./../images/od.png"/>
                                 {{ order.order }}
                             </view>
@@ -86,11 +86,11 @@
                                         {{ order.content }}
                                     </view>
                                     <view class="weui-media-box__info">
-                                        <view class="weui-media-box__info__meta _text" style="width: 60%;">
+                                        <view class="weui-media-box__info__meta _text" style="width: 55%;">
                                             <image class="_address" src="./../images/address.png"/>
                                             {{ order.area.name }}
                                         </view>
-                                        <view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text" style="width: 40%;">
+                                        <view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text" style="width: 45%;">
                                             <image class="_address" src="./../images/time.png"/>
                                             {{ order.time_diff }}
                                         </view>
@@ -123,49 +123,56 @@
             userInfo: null,
             orders: [],
             page: 1,
-            noMoreData: false
+            noMoreData: false,
+            load: 1 // 加载数据次数
         }
 
         async getOrder(page = 1, reset = false) {
+            this.load++
             try {
                 let orderResponse = await api.authRequest({
-                    url: 'order',
+                    url: 'orders',
                     data: {
                         school_id: this.userInfo.school_id,
                         page: page
                     }
                 }, true)
+
                 let orders = orderResponse.data.data
 
-                orders.forEach(order => {
-                    order.time_diff = util.diffForHumans(order.created_at)
-                    if (order.images.length > 0) {
-                        order.images = `${dev_upyun}/${order.images[0].image_url}`
-                    } else {
-                        order.images = ''
+                if (orders) {
+                    orders.forEach(order => {
+                        order.time_diff = util.diffForHumans(order.created_at)
+                        if (order.images.length > 0) {
+                            order.images = `${dev_upyun}/${order.images[0].image_url}`
+                        } else {
+                            order.images = ''
+                        }
+                    })
+
+                    // 如果传入参数 reset 为true，则覆盖 orders
+                    this.orders = reset ? orders : this.orders.concat(orders)
+
+                    let pagination = orderResponse.data.meta
+
+                    // 根据分页设置是否还有更多数据
+                    if (pagination.current_page * pagination.per_page > pagination.total) {
+                        this.noMoreData = true
                     }
-                })
-
-                // 如果传入参数 reset 为true，则覆盖 orders
-                this.orders = reset ? orders : this.orders.concat(orders)
-
-                let pagination = orderResponse.data.meta
-
-                // 根据分页设置是否还有更多数据
-                if (pagination.total - pagination.current_page * pagination.per_page < pagination.per_page) {
-                    this.noMoreData = true
+                    this.$apply()
                 }
-                this.$apply()
             } catch (err) {
                 console.log(err)
                 wepy.showModal({
                     title: '提示',
-                    content: '服务器错误，请联系管理员'
+                    showCancel: false,
+                    confirmText: '朕知道了',
+                    content: err + '服务器错误，请重试！'
                 })
             }
         }
 
-        async onShow() {
+        async onLoad() {
 
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
@@ -194,7 +201,7 @@
 
             await this.getOrder()
             this.$apply()
-            console.log(this.orders)
+
             wepy.setStorageSync('school_id', this.userInfo.school_id)
             wepy.setStorageSync('phone', this.userInfo.phone || 0)
         }
@@ -211,7 +218,7 @@
             if (this.noMoreData) {
                 return
             }
-            console.log(11111111)
+
             this.page = this.page + 1
             await this.getOrder(this.page)
             this.$apply()

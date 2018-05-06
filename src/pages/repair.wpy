@@ -104,10 +104,10 @@
                 </view>
 
                 <view class="weui-btn-area">
-                    <button class="weui-btn" type="warn" wx:if="{{ imageList.length > 0 }}" @tap="clearAllImage">清除所选图片</button>
+                    <button class="weui-btn" type="warn" disabled="{{ buttons }}" wx:if="{{ imageList.length > 0 }}" @tap="clearAllImage">清除所选图片</button>
                 </view>
                 <view class="weui-btn-area">
-                    <button class="weui-btn" type="primary" formType="submit">提交申报</button>
+                    <button class="weui-btn" type="primary" loading="{{ butLoading }}" disabled="{{ butLoading }}" formType="submit">提交申报</button>
                 </view>
             </form>
 
@@ -145,20 +145,24 @@
             countIndex: 2,
             count: [1, 2, 3],
             userInfo: null,
-            errors: {}
+            errors: {},
+            butLoading: false
         }
 
         async submit(e) {
             this.errors = {}; // 重置错误
+            this.butLoading = true
 
             let formData = e.detail.value
             if (!formData.address) {
                 this.errors.address = ['敢不敢填一下地址？']
+                this.butLoading = false
                 return false
             }
             // 如果未填写内容，提示用户
             if (!this.contents) {
                 this.errors.content = ['敢不敢来点刺激的描述？']
+                this.butLoading = false
                 return false
             }
 
@@ -172,6 +176,7 @@
                             name: 'images',
                             filePath: path
                         }, false)
+
                         let res = JSON.parse(result.data)
                         this.imagesUrl.push(res.url)
                     }
@@ -189,11 +194,12 @@
                     url: 'order',
                     method: 'POST',
                     data: formData
-                }, true)
+                }, false)
 
                 if (repairResponse.statusCode == 200) {
                     wx.showModal({
                         title: '温馨提示',
+                        confirmText: '朕知道了',
                         content: '你的申报已经提交至后勤处，请耐心等待审核。',
                         showCancel: false,
                         complete: () => {
@@ -201,6 +207,7 @@
                             this.imageList = []
                             this.imagesUrl = []
                             this.contents = null
+                            this.butLoading = false
 
                             this.$apply()
                         }
@@ -209,15 +216,18 @@
 
             } catch (err) {
                 console.log(err)
+                this.butLoading = false
                 wepy.showModal({
                     title: '提示',
-                    content: '服务器错误，请重试！'
+                    showCancel: false,
+                    confirmText: '朕知道了',
+                    content: '服务器错误，请稍候再试！'
                 })
             }
 
         }
 
-        async onShow() {
+        async onLoad() {
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
 
@@ -263,11 +273,20 @@
                 this.textLen = e.detail.value.length
             },
             chooseImage () {
+                let _this = this
                 wepy.chooseImage({
-                    sourceType: sourceType[this.data.sourceTypeIndex],
-                    count: this.data.count[this.data.countIndex],
+                    sourceType: sourceType[_this.data.sourceTypeIndex],
+                    count: _this.data.count[_this.data.countIndex],
+                    sizeType: 'compressed' // 压缩图片
                 }).then(res => {
-                    this.imageList = res.tempFilePaths;
+                    console.log(res.tempFilePaths);
+                    if (_this.imageList.length === 3) {
+                        _this.imageList = res.tempFilePaths
+                    } else {
+                        res.tempFilePaths.forEach(v => {
+                            _this.imageList.push(v)
+                        })
+                    }
                 })
             },
             previewImage (e) {

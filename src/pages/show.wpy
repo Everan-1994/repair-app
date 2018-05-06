@@ -1,0 +1,80 @@
+<style lang="less">
+    page{
+        background-color: #FFFFFF;
+    }
+    .avatar-wrap {
+        position: relative;
+        margin-right: 10px;
+    }
+    .avatar {
+        width: 50px;
+        height: 50px;
+        display: block;
+        border-radius: 50%;
+    }
+    .order-title {
+        padding: 15px;
+    }
+</style>
+<template>
+    <view class="page">
+        <view class="page__bd">
+            <view class="weui-cells weui-cells_after-title">
+                <navigator class="weui-cell">
+                    <view class="weui-cell__hd avatar-wrap">
+                        <image class="avatar" src="{{ order.user.avatar }}"/>
+                    </view>
+                    <view class="weui-cell__bd">
+                        <view class="page__desc">申报时间：{{ order.created_at }}</view>
+                        <view class="page__desc">申报类型：{{ order.type }}</view>
+                        <view class="page__desc">故障描述：{{ order.content }}</view>
+                    </view>
+                </navigator>
+            </view>
+            <view class="order-title">
+                <view class="page__title">1111111</view>
+                <view class="weui-media-box__info order-info">
+                    <view class="weui-media-box__info__meta">11111111 • </view>
+                </view>
+            </view>
+            <view class="weui-article">
+                <rich-text nodes="11111111" bindtap="tap"></rich-text>
+            </view>
+        </view>
+    </view>
+</template>
+<script>
+    import wepy from 'wepy'
+    import api from '@/utils/api'
+
+    export default class orderShow extends wepy.page {
+        config = {
+            navigationBarTitleText: '申报详情'
+        }
+        data = {
+            // 话题数据
+            order: null
+        }
+        // 获取话题数据
+        async getOrder(id) {
+            try {
+                let orderResponse = await api.authRequest({
+                    url: `orders/${id}`,
+                })
+
+                this.order = orderResponse.data
+
+                this.$apply()
+            } catch (err) {
+                console.log(err)
+                wepy.showModal({
+                    title: '提示',
+                    content: '服务器错误，请重试！'
+                })
+            }
+        }
+        onLoad(options) {
+            this.getOrder(options.id)
+        }
+    }
+</script>

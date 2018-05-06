@@ -50,11 +50,12 @@
                 'pages/user',
                 'pages/info',
                 'pages/commons/fail',
+                'pages/show',
             ],
             window: {
                 backgroundTextStyle: 'light',
                 navigationBarBackgroundColor: '#fff',
-                navigationBarTitleText: '掌上报修',
+                navigationBarTitleText: '掌上申报',
                 navigationBarTextStyle: 'black'
             },
             tabBar: {

@@ -14,13 +14,22 @@ const request = async (options, showLoading = true) => {
 
     if (showLoading) {
         // 隐藏加载中
-        wepy.hideLoading()
+        setTimeout(() => {
+            wepy.hideLoading()
+        }, 1500)
+    }
+
+    // 重新获取token
+    if (response.statusCode === 401) {
+        await login()
     }
 
     // 服务器异常后给与提示
     if (response.statusCode === 429) {
         wepy.showModal({
             title: '提示',
+            showCancel: false,
+            confirmText: '朕知道了',
             content: '操作过于频繁，请1分钟后再试！'
         })
     }
@@ -29,6 +38,8 @@ const request = async (options, showLoading = true) => {
     if (response.statusCode === 500) {
         wepy.showModal({
             title: '提示',
+            showCancel: false,
+            confirmText: '朕知道了',
             content: '服务器错误，请重试'
         })
     }
@@ -90,6 +101,8 @@ const login = async (params = {}) => {
     } catch (error) {
         wepy.showModal({
             title: '提示',
+            showCancel: false,
+            confirmText: '朕知道了',
             content: error.error || '服务器错误，请重试'
         })
     }

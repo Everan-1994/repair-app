@@ -38,6 +38,15 @@
         config = {
             navigationBarTitleText: '温馨提示'
         }
+        async onShow() {
+            let school_id = wepy.getStorageSync('school_id')
+            let phone = wepy.getStorageSync('phone')
+            if (school_id > 0 && phone !== 0) {
+                wepy.switchTab({
+                    url: '/pages/repair'
+                })
+            }
+        }
         methods = {
             toIndex () {
                 wepy.switchTab({
