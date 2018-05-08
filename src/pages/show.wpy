@@ -1,6 +1,11 @@
 <style lang="less">
     @import './../style/timezone.less';
 
+    .avatar-wrap {
+        position: relative;
+        margin-right: 10px;
+    }
+
     .avatar {
         width: 50px;
         height: 50px;
@@ -8,9 +13,28 @@
         border-radius: 50%;
     }
 
+    .icons {
+        vertical-align: middle;
+        width: 25px;
+        height: 25px;
+    }
+
 </style>
 <template>
     <view class="page">
+        <view class="weui-cells weui-cells_after-title">
+            <navigator class="weui-cell" url="">
+                <view class="weui-cell__hd avatar-wrap">
+                    <image class="avatar" src="{{ order.user.avatar }}"/>
+                </view>
+                <view class="weui-cell__bd">
+                    <view class="page__desc"><image src="./../images/number.png" class="icons"/> 申报单号：{{ order.order }}</view>
+                    <view class="page__desc"><image src="./../images/type.png" class="icons"/> 申报类型：{{ type[order.type] }}</view>
+                    <view class="page__desc"><image src="./../images/school.png" class="icons"/> 申报区域：{{ order.area.name }}</view>
+                    <view class="page__desc"><image src="./../images/grid.png" class="icons"/> 申报地点：{{ order.address }}</view>
+                </view>
+            </navigator>
+        </view>
         <view class="page__bd">
             <!--事件时间轴-->
             <view class="flowChart">
@@ -45,7 +69,7 @@
                             </view>
                             <!--中-->
                             <view class="NodeDetail-content">
-                                <view class="span badge">回复:</view>
+                                <view class="span badge"></view>
 
                                 <view class="p">两年后，前女友突然发短信来说：“我们复合吧，转了一圈才发现你是最好的，我后悔了。”
                                     短短几字倾刻间击溃我所有的伪装与防备，热泪流进挥之不去的记忆，夜夜思念的那些牵手在一起的美好日子又悄然浮上心头，感觉不再累多么温暖。
@@ -79,7 +103,7 @@
                             </view>
                             <!--中-->
                             <view class="NodeDetail-content">
-                                <view class="span badge">回复:</view>
+                                <view class="span badge"></view>
 
                                 <view class="p">无回复</view>
                             </view>
@@ -112,7 +136,7 @@
                             </view>
                             <!--中-->
                             <view class="NodeDetail-content">
-                                <view class="span badge">回复:</view>
+                                <view class="span badge"></view>
 
                                 <view class="p">同意啊，不错不的</view>
                             </view>
@@ -146,7 +170,7 @@
                             </view>
                             <!--中-->
                             <view class="NodeDetail-content">
-                                <view class="span badge">回复:</view>
+                                <view class="span badge"></view>
 
                                 <view class="p">同意啊，不错不的</view>
                             </view>
@@ -159,8 +183,15 @@
                     </view>
                     <view class="oneNode">
                         <!--左侧小球-->
-                        <view class="check">
-                            结束
+                        <!--<view class="check">-->
+                            <!--结束-->
+                        <!--</view>-->
+                        <!--<view class="tag-boder">-->
+                            <!--<view class="tag">-->
+                            <!--</view>-->
+                        <!--</view>-->
+                        <view class="check check-prime">
+                            发起
                         </view>
                         <view class="tag-boder">
                             <view class="tag">
@@ -174,18 +205,24 @@
                                 <image class="imgs" src="{{ order.user.avatar }}" />
                                 <!--内容-->
                                 <view class="details">
-                                    <view>站长素材赵丹</view>
-                                    <view class="p">结束流程</view>
+                                    <view>
+                                        {{ order.user.name }}
+                                    </view>
+                                    <view class="p">发起申报</view>
                                 </view>
                             </view>
                             <!--中-->
                             <view class="NodeDetail-content">
-                                <view class="span badge BadgeGray">无回复</view>
+                                <view class="span badge"></view>
+
+                                <view class="p"><image src="./../images/describe.png" class="icons"/> {{ order.content }}</view>
                             </view>
                             <!--下-->
                             <view class="NodeDetail-footer">
-                                <view class="span">2017-10-31 22:22:31</view>
-
+                                <view class="span">
+                                    <image src="./../images/rtime.png" class="icons"/>
+                                    {{ order.created_at }}
+                                </view>
                             </view>
                         </view>
                     </view>

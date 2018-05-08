@@ -133,10 +133,10 @@
             contents: null,
             textLen: 0,
             items: [
-                {value: '1', name: '水务'},
-                {value: '2', name: '电务'},
-                {value: '3', name: '木工'},
-                {value: '4', name: '其他', checked: 'true'},
+                {value: '0', name: '水务'},
+                {value: '1', name: '电务'},
+                {value: '2', name: '木工'},
+                {value: '3', name: '其他', checked: 'true'},
             ],
             imageList: [],
             imagesUrl: [], // 上传返回的 url

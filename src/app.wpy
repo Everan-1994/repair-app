@@ -51,6 +51,7 @@
                 'pages/info',
                 'pages/commons/fail',
                 'pages/show',
+                'pages/users/my-repair',
             ],
             window: {
                 backgroundTextStyle: 'light',
