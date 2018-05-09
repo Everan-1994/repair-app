@@ -1,13 +1,13 @@
 <style lang="less">
     .navbar {
         .page,
-        .page__bd{
+        .page__bd {
             height: 100%;
         }
-        .page__bd{
+        .page__bd {
             padding-bottom: 0;
         }
-        .weui-tab__content{
+        .weui-tab__content {
             padding-top: 60px;
             /*text-align: center;*/
         }
@@ -55,12 +55,54 @@
         height: 15px;
         margin-bottom: 2px;
     }
+
     ._text {
-        display:inline-block;
-        box-sizing:border-box;
-        overflow:hidden;
-        white-space:nowrap;
-        text-overflow:ellipsis;
+        display: inline-block;
+        box-sizing: border-box;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    // 滑动
+    .touch-item {
+        font-size: 14px;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid #ccc;
+        width: 100%;
+        overflow: hidden
+    }
+
+    .content {
+        width: 100%;
+        padding: 10px;
+        line-height: 22px;
+        margin-right: 0;
+        -webkit-transition: all 0.4s;
+        transition: all 0.4s;
+        -webkit-transform: translateX(90px);
+        transform: translateX(90px);
+        margin-left: -90px
+    }
+
+    .del {
+        background-color: orangered;
+        width: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        -webkit-transform: translateX(90px);
+        transform: translateX(90px);
+        -webkit-transition: all 0.4s;
+        transition: all 0.4s;
+    }
+
+    .touch-move-active .content, .touch-move-active .del {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
     }
 </style>
 <template>
@@ -68,10 +110,12 @@
         <view class="page__bd">
             <view class="weui-tab">
                 <view class="weui-navbar">
-                    <view wx:for="{{tabs}}" wx:key="*this" id="{{index}}" class="weui-navbar__item {{activeIndex == index ? 'weui-bar__item_on' : ''}}" @tap="tabClick">
+                    <view wx:for="{{tabs}}" wx:key="*this" id="{{index}}"
+                          class="weui-navbar__item {{activeIndex == index ? 'weui-bar__item_on' : ''}}" @tap="tabClick">
                         <view class="weui-navbar__title">{{item}}</view>
                     </view>
-                    <view class="weui-navbar__slider" style="left: {{ sliderLeft }}px; transform: translateX({{ sliderOffset }}px); -webkit-transform: translateX({{ sliderOffset }}px);"></view>
+                    <view class="weui-navbar__slider"
+                          style="left: {{ sliderLeft }}px; transform: translateX({{ sliderOffset }}px); -webkit-transform: translateX({{ sliderOffset }}px);"></view>
                 </view>
                 <view class="weui-tab__panel" style="padding-top: 0;">
                     <view class="weui-tab__content" hidden="{{activeIndex != 0}}">
@@ -103,7 +147,8 @@
                                                         <image class="_address" src="./../../images/address.png"/>
                                                         {{ order.area.name }}
                                                     </view>
-                                                    <view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text" style="width: 45%;">
+                                                    <view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text"
+                                                          style="width: 45%;">
                                                         <image class="_address" src="./../../images/time.png"/>
                                                         {{ order.time_diff }}
                                                     </view>
@@ -119,7 +164,16 @@
                         </view>
                     </view>
                     <view class="weui-tab__content" hidden="{{activeIndex != 1}}">
-                        2
+
+                        <view class="container">
+                            <view class="touch-item {{item.isTouchMove ? 'touch-move-active' : ''}}"
+                                  data-index="{{index}}" bindtouchstart="touchstart" bindtouchmove="touchmove"
+                                  wx:for="{{items}}" wx:key="index">
+                                <view class="content">{{item.content}}</view>
+                                <view class="del" catchtap="del" data-index="{{index}}">删除</view>
+                            </view>
+                        </view>
+
                     </view>
                     <view class="weui-tab__content" hidden="{{activeIndex != 2}}">
                         3
@@ -152,16 +206,68 @@
             orders: [],
             page: 1,
             noMoreData: false,
+            items: [],
+            startX: 0, // 开始坐标
+            startY: 0
         };
 
         methods = {
-            tabClick (e) {
+            tabClick(e) {
                 this.sliderOffset = e.currentTarget.offsetLeft;
                 this.activeIndex = e.currentTarget.id;
+            },
+            //手指触摸动作开始 记录起点X坐标
+            touchstart(e) {
+                //开始触摸时 重置所有删除
+                this.data.items.forEach(function (v, i) {
+                    if (v.isTouchMove)//只操作为true的
+                        v.isTouchMove = false;
+                })
+                this.setData({
+                    startX: e.changedTouches[0].clientX,
+                    startY: e.changedTouches[0].clientY,
+                    items: this.data.items
+                })
+            },
+            //滑动事件处理
+            touchmove(e) {
+                var that = this,
+                    index = e.currentTarget.dataset.index,//当前索引
+                    startX = that.data.startX,//开始X坐标
+                    startY = that.data.startY,//开始Y坐标
+                    touchMoveX = e.changedTouches[0].clientX,//滑动变化坐标
+                    touchMoveY = e.changedTouches[0].clientY,//滑动变化坐标
+
+                    _X = touchMoveX - startX,
+                    _Y = touchMoveY - startY,
+                    //返回角度 /Math.atan()返回数字的反正切值
+                    angle = 360 * Math.atan(_Y / _X) / (2 * Math.PI);
+                that.data.items.forEach(function (v, i) {
+                    v.isTouchMove = false
+                    //滑动超过30度角 return
+                    if (Math.abs(angle) > 30) return;
+                    if (i == index) {
+                        if (touchMoveX > startX) //右滑
+                            v.isTouchMove = false
+                        else //左滑
+                            v.isTouchMove = true
+                    }
+                })
+                //更新数据
+                that.setData({
+                    items: that.data.items
+                })
+            },
+            //删除事件
+            del(e) {
+                this.data.items.splice(e.currentTarget.dataset.index, 1)
+                this.setData({
+                    items: this.data.items
+                })
             }
         }
 
-        async onLoad () {
+        async onLoad() {
             let res = await wepy.getSystemInfo();
 
             this.sliderLeft = (res.windowWidth / this.tabs.length - sliderWidth) / 2;
@@ -197,6 +303,16 @@
 
             wepy.setStorageSync('school_id', this.userInfo.school_id)
             wepy.setStorageSync('phone', this.userInfo.phone || 0)
+
+            for (var i = 0; i < 10; i++) {
+                this.data.items.push({
+                    content: i + " 向左滑动删除哦,向左滑动删除哦,向左滑动删除哦,向左滑动删除哦,向左滑动删除哦",
+                    isTouchMove: false //默认全隐藏删除
+                })
+            }
+            this.setData({
+                items: this.data.items
+            })
         }
 
         async getOrder(page = 1, reset = false) {
