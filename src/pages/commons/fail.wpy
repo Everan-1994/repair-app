@@ -38,7 +38,7 @@
         config = {
             navigationBarTitleText: '温馨提示'
         }
-        async onShow() {
+        async onShow(options) {
             let school_id = wepy.getStorageSync('school_id')
             let phone = wepy.getStorageSync('phone')
             if (school_id > 0 && phone !== 0) {

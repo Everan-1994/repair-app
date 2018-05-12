@@ -65,44 +65,50 @@
     }
 
     // 滑动
-    .touch-item {
-        font-size: 14px;
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid #ccc;
+    .order-item {
         width: 100%;
-        overflow: hidden
+        height: 161px;
+        position: relative;
+        left:0;
+        top:0;
+        overflow: hidden;
     }
-
-    .content {
+    .order {
+        position: absolute;
         width: 100%;
-        padding: 10px;
-        line-height: 22px;
-        margin-right: 0;
-        -webkit-transition: all 0.4s;
-        transition: all 0.4s;
-        -webkit-transform: translateX(90px);
-        transform: translateX(90px);
-        margin-left: -90px
+        left:0;
+        top:0;
+        z-index: 100;
     }
-
-    .del {
-        background-color: orangered;
-        width: 90px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        -webkit-transform: translateX(90px);
-        transform: translateX(90px);
-        -webkit-transition: all 0.4s;
-        transition: all 0.4s;
+    ._actiong {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left:0;
+        top:0;
+        z-index: 0;
     }
-
-    .touch-move-active .content, .touch-move-active .del {
-        -webkit-transform: translateX(0);
-        transform: translateX(0);
+    ._del {
+        position: absolute;
+        width: 150rpx;
+        height: 100%;
+        top: 1rpx;
+        right: 0;
+        background-color: rgb(255, 58, 50);
+        color: #FFF;
+        text-align: center;
+        line-height: 150rpx;
+    }
+    ._edit {
+        position: absolute;
+        width: 200rpx;
+        height: 100%;
+        top:1rpx;
+        right: 150rpx;
+        background-color: rgb(200, 199, 205);
+        color:#FFF;
+        text-align: center;
+        line-height:150rpx;
     }
 </style>
 <template>
@@ -119,61 +125,110 @@
                 </view>
                 <view class="weui-tab__panel" style="padding-top: 0;">
                     <view class="weui-tab__content" hidden="{{activeIndex != 0}}">
-                        <repeat for="{{ orders }}" key="index" index="index" item="order">
-                            <navigator url="/pages/show?id={{ order.id }}">
-                                <view class="black-one">
-                                    <view class="weui-panel__hd top-title">
-                                        <view class="weui-cell__bd _text" style="width: 50%;">
-                                            <image class="icons" src="./../../images/od.png"/>
-                                            {{ order.order }}
+                        <repeat for="{{ orders }}" key="index" index="index" item="order"
+                                animation='{{ order.wrapAnimation }}' scroll-y='{{ scrollY }}'>
+                            <view id='{{ index }}' index="index" class="order-item"
+                                  animation='{{ order.animation }}'
+                                  @touchstart='onTouchStart'
+                                  @touchmove='onTouchMove'
+                                  @touchend='onTouchEnd'>
+                                <navigator url="/pages/show?id={{ order.id }}" class="order">
+                                    <view class="black-one">
+                                        <view class="weui-panel__hd top-title">
+                                            <view class="weui-cell__bd _text" style="width: 50%;">
+                                                <image class="icons" src="./../../images/od.png"/>
+                                                {{ order.order }}
+                                            </view>
+                                        </view>
+                                        <view class="weui-panel__bd" style="padding: 10px 15px;">
+                                            <navigator url="/pages/show?id={{ order.id }}"
+                                                       class="weui-media-box weui-media-box_appmsg"
+                                                       hover-class="weui-cell_active" style="padding: 5px;">
+                                                <view wx:if="{{ order.images }}"
+                                                      class="weui-media-box__hd weui-media-box__hd_in-appmsg">
+                                                    <image class="_thumb" src="{{ order.images }}"/>
+                                                </view>
+                                                <view wx:else class="weui-media-box__hd weui-media-box__hd_in-appmsg">
+                                                    <image class="_thumb" src="./../../images/no-img.png"/>
+                                                </view>
+                                                <view class="weui-media-box__bd weui-media-box__bd_in-appmsg">
+                                                    <view class="weui-media-box__desc">
+                                                        {{ order.content }}
+                                                    </view>
+                                                    <view class="weui-media-box__info">
+                                                        <view class="weui-media-box__info__meta _text"
+                                                              style="width: 55%;">
+                                                            <image class="_address" src="./../../images/address.png"/>
+                                                            {{ order.area.name }}
+                                                        </view>
+                                                        <view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text"
+                                                              style="width: 45%;">
+                                                            <image class="_address" src="./../../images/time.png"/>
+                                                            {{ order.time_diff }}
+                                                        </view>
+                                                    </view>
+                                                </view>
+                                            </navigator>
                                         </view>
                                     </view>
-                                    <view class="weui-panel__bd" style="padding: 10px 15px;">
-                                        <navigator url="" class="weui-media-box weui-media-box_appmsg"
-                                                   hover-class="weui-cell_active" style="padding: 5px;">
-                                            <view wx:if="{{ order.images }}"
-                                                  class="weui-media-box__hd weui-media-box__hd_in-appmsg">
-                                                <image class="_thumb" src="{{ order.images }}"/>
-                                            </view>
-                                            <view wx:else class="weui-media-box__hd weui-media-box__hd_in-appmsg">
-                                                <image class="_thumb" src="./../../images/no-img.png"/>
-                                            </view>
-                                            <view class="weui-media-box__bd weui-media-box__bd_in-appmsg">
-                                                <view class="weui-media-box__desc">
-                                                    {{ order.content }}
-                                                </view>
-                                                <view class="weui-media-box__info">
-                                                    <view class="weui-media-box__info__meta _text" style="width: 55%;">
-                                                        <image class="_address" src="./../../images/address.png"/>
-                                                        {{ order.area.name }}
-                                                    </view>
-                                                    <view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text"
-                                                          style="width: 45%;">
-                                                        <image class="_address" src="./../../images/time.png"/>
-                                                        {{ order.time_diff }}
-                                                    </view>
-                                                </view>
-                                            </view>
-                                        </navigator>
+                                </navigator>
+                                <view class='_actiong'>
+                                    <view class='_del' id='{{ index }}' data-id="{{ order.id }}"
+                                          @tap="onDeleteMsgTap">
+                                        删除
+                                    </view>
+                                    <view class='_edit'>
+                                        标记未读
                                     </view>
                                 </view>
-                            </navigator>
+                            </view>
                         </repeat>
                         <view class="weui-loadmore weui-loadmore_line" wx:if="{{ noMoreData }}">
                             <view class="weui-loadmore__tips weui-loadmore__tips_in-line">我是有底线的哦！~~~</view>
                         </view>
                     </view>
                     <view class="weui-tab__content" hidden="{{activeIndex != 1}}">
-
-                        <view class="container">
-                            <view class="touch-item {{item.isTouchMove ? 'touch-move-active' : ''}}"
-                                  data-index="{{index}}" bindtouchstart="touchstart" bindtouchmove="touchmove"
-                                  wx:for="{{items}}" wx:key="index">
-                                <view class="content">{{item.content}}</view>
-                                <view class="del" catchtap="del" data-index="{{index}}">删除</view>
-                            </view>
-                        </view>
-
+                        <!--<view class="container">-->
+                            <!--<scroll-view style='height:{{ height }}px;' scroll-y='{{ scrollY }}' class='msg-list'>-->
+                                <!--<view wx:for="{{ orders }}" wx:key="id" wx:index="index" wx:for-item="order"-->
+                                      <!--class='msg-item' animation='{{ order.wrapAnimation }}'>-->
+                                    <!--<view id='{{ index }}' index="index" class='msg' animation='{{order.animation}}'-->
+                                          <!--@touchstart='onTouchStart' @touchmove='onTouchMove' @touchend='onTouchEnd'>-->
+                                        <!--<view wx:if="{{ order.images }}"-->
+                                              <!--class="weui-media-box__hd weui-media-box__hd_in-appmsg">-->
+                                            <!--<image class="header-img" src="{{ order.images }}"/>-->
+                                        <!--</view>-->
+                                        <!--<view wx:else class="weui-media-box__hd weui-media-box__hd_in-appmsg">-->
+                                            <!--<image class="header-img" src="./../../images/no-img.png"/>-->
+                                        <!--</view>-->
+                                        <!--<text class='user-name weui-media-box__desc'>-->
+                                            <!--{{ order.content }}-->
+                                        <!--</text>-->
+                                        <!--<view class='msg-text'>-->
+                                            <!--<view class="weui-media-box__info">-->
+                                                <!--<view class="weui-media-box__info__meta _text">-->
+                                                    <!--<image class="_address" src="./../../images/address.png"/>-->
+                                                    <!--{{ order.area.name }}-->
+                                                <!--</view>-->
+                                                <!--<view class="weui-media-box__info__meta weui-media-box__info__meta_extra _text">-->
+                                                    <!--<image class="_address" src="./../../images/time.png"/>-->
+                                                    <!--{{ order.time_diff }}-->
+                                                <!--</view>-->
+                                            <!--</view>-->
+                                        <!--</view>-->
+                                    <!--</view>-->
+                                    <!--<view class='msg-menu'>-->
+                                        <!--<view class='menu-delete' id='{{ index }}' data-id="{{ order.id }}"-->
+                                              <!--@tap="onDeleteMsgTap">-->
+                                            <!--删除-->
+                                        <!--</view>-->
+                                        <!--<view class='menu-mark'>-->
+                                            <!--标记未读-->
+                                        <!--</view>-->
+                                    <!--</view>-->
+                                <!--</view>-->
+                            <!--</scroll-view>-->
+                        <!--</view>-->
                     </view>
                     <view class="weui-tab__content" hidden="{{activeIndex != 2}}">
                         3
@@ -206,9 +261,17 @@
             orders: [],
             page: 1,
             noMoreData: false,
-            items: [],
-            startX: 0, // 开始坐标
-            startY: 0
+            swipeCheckX: 35, //激活检测滑动的阈值
+            swipeCheckState: 0, //0未激活 1激活
+            maxMoveLeft: 185, //消息列表项最大左滑距离
+            correctMoveLeft: 175, //显示菜单时的左滑距离
+            thresholdMoveLeft: 75,//左滑阈值，超过则显示菜单
+            lastShowMsgId: '', //记录上次显示菜单的消息id
+            moveX: 0,  //记录平移距离
+            showState: 0, //0 未显示菜单 1显示菜单
+            touchStartState: 0, // 开始触摸时的状态 0 未显示菜单 1 显示菜单
+            swipeDirection: 0, //是否触发水平滑动 0:未触发 1:触发水平滑动 2:触发垂直滑动
+            height: 0,
         };
 
         methods = {
@@ -216,58 +279,148 @@
                 this.sliderOffset = e.currentTarget.offsetLeft;
                 this.activeIndex = e.currentTarget.id;
             },
-            //手指触摸动作开始 记录起点X坐标
-            touchstart(e) {
-                //开始触摸时 重置所有删除
-                this.data.items.forEach(function (v, i) {
-                    if (v.isTouchMove)//只操作为true的
-                        v.isTouchMove = false;
-                })
-                this.setData({
-                    startX: e.changedTouches[0].clientX,
-                    startY: e.changedTouches[0].clientY,
-                    items: this.data.items
-                })
+            onTouchStart: function (e) {
+                if (this.showState === 1) {
+                    this.touchStartState = 1;
+                    this.showState = 0;
+                    this.moveX = 0;
+                    this.translateXMsgItem(this.lastShowMsgId, 0, 200);
+                    this.lastShowMsgId = "";
+                    return;
+                }
+                this.firstTouchX = e.touches[0].clientX;
+                this.firstTouchY = e.touches[0].clientY;
+                if (this.firstTouchX > this.swipeCheckX) {
+                    this.swipeCheckState = 1;
+                }
+                this.lastMoveTime = e.timeStamp;
             },
-            //滑动事件处理
-            touchmove(e) {
-                var that = this,
-                    index = e.currentTarget.dataset.index,//当前索引
-                    startX = that.data.startX,//开始X坐标
-                    startY = that.data.startY,//开始Y坐标
-                    touchMoveX = e.changedTouches[0].clientX,//滑动变化坐标
-                    touchMoveY = e.changedTouches[0].clientY,//滑动变化坐标
 
-                    _X = touchMoveX - startX,
-                    _Y = touchMoveY - startY,
-                    //返回角度 /Math.atan()返回数字的反正切值
-                    angle = 360 * Math.atan(_Y / _X) / (2 * Math.PI);
-                that.data.items.forEach(function (v, i) {
-                    v.isTouchMove = false
-                    //滑动超过30度角 return
-                    if (Math.abs(angle) > 30) return;
-                    if (i == index) {
-                        if (touchMoveX > startX) //右滑
-                            v.isTouchMove = false
-                        else //左滑
-                            v.isTouchMove = true
+            onTouchMove(e) {
+                if (this.swipeCheckState === 0) {
+                    return;
+                }
+                //当开始触摸时有菜单显示时，不处理滑动操作
+                if (this.touchStartState === 1) {
+                    return;
+                }
+                var moveX = e.touches[0].clientX - this.firstTouchX;
+                var moveY = e.touches[0].clientY - this.firstTouchY;
+                //已触发垂直滑动，由scroll-view处理滑动操作
+                if (this.swipeDirection === 2) {
+                    return;
+                }
+                //未触发滑动方向
+                if (this.swipeDirection === 0) {
+                    //触发垂直操作
+                    if (Math.abs(moveY) > 4) {
+                        this.swipeDirection = 2;
+
+                        return;
                     }
-                })
-                //更新数据
-                that.setData({
-                    items: that.data.items
-                })
+                    //触发水平操作
+                    if (Math.abs(moveX) > 4) {
+                        this.swipeDirection = 1;
+                    }
+                    else {
+                        return;
+                    }
+
+                }
+                this.lastMoveTime = e.timeStamp;
+                //处理边界情况
+                if (moveX > 0) {
+                    moveX = 0;
+                }
+                //检测最大左滑距离
+                if (moveX < -this.maxMoveLeft) {
+                    moveX = -this.maxMoveLeft;
+                }
+                this.moveX = moveX;
+                this.translateXMsgItem(e.currentTarget.id, moveX, 0);
             },
-            //删除事件
-            del(e) {
-                this.data.items.splice(e.currentTarget.dataset.index, 1)
-                this.setData({
-                    items: this.data.items
-                })
+            onTouchEnd(e) {
+                this.swipeCheckState = 0;
+                var swipeDirection = this.swipeDirection;
+                this.swipeDirection = 0;
+                if (this.touchStartState === 1) {
+                    this.touchStartState = 0;
+                    this.setData({scrollY: true});
+                    return;
+                }
+                //垂直滚动，忽略
+                if (swipeDirection !== 1) {
+                    return;
+                }
+                if (this.moveX === 0) {
+                    this.showState = 0;
+                    //不显示菜单状态下,激活垂直滚动
+                    this.setData({scrollY: true});
+                    return;
+                }
+                if (this.moveX === this.correctMoveLeft) {
+                    this.showState = 1;
+                    this.lastShowMsgId = e.currentTarget.id;
+                    return;
+                }
+                if (this.moveX < -this.thresholdMoveLeft) {
+                    this.moveX = -this.correctMoveLeft;
+                    this.showState = 1;
+                    this.lastShowMsgId = e.currentTarget.id;
+                }
+                else {
+                    this.moveX = 0;
+                    this.showState = 0;
+                    //不显示菜单,激活垂直滚动
+                    this.setData({scrollY: true});
+                }
+                this.translateXMsgItem(e.currentTarget.id, this.moveX, 500);
+            },
+            onDeleteMsgTap(e) {
+                console.log(e.target.dataset.id)
+                console.log(e.currentTarget.id)
+                this.deleteMsgItem(e)
             }
+
+        }
+
+        translateXMsgItem(id, x, duration) {
+            var animation = wepy.createAnimation({duration: duration});
+            animation.translateX(x).step();
+            this.animationMsgItem(id, animation);
+        }
+
+        animationMsgItem(id, animation) {
+            var param = {};
+            var indexString = `orders[${id}].animation`;
+            param[indexString] = animation.export();
+            this.setData(param);
+        }
+
+        deleteMsgItem(e) {
+            var animation = wx.createAnimation({duration: 200});
+            animation.height(0).opacity(0).step();
+            this.animationMsgWrapItem(e.currentTarget.id, animation);
+            var s = this;
+            setTimeout(function () {
+                s.data.orders.splice(e.currentTarget.id, 1);
+                s.setData({orders: s.data.orders});
+            }, 200);
+            this.showState = 0;
+            this.setData({scrollY: true});
+        }
+
+        animationMsgWrapItem(index, animation) {
+            var param = {};
+            var indexString = 'orders[' + index + '].wrapAnimation';
+            param[indexString] = animation.export();
+            this.setData(param);
         }
 
         async onLoad() {
+            let deviceInfo = wx.getSystemInfoSync();
+            this.height = deviceInfo.windowHeight; // 高度
+
             let res = await wepy.getSystemInfo();
 
             this.sliderLeft = (res.windowWidth / this.tabs.length - sliderWidth) / 2;
@@ -304,15 +457,6 @@
             wepy.setStorageSync('school_id', this.userInfo.school_id)
             wepy.setStorageSync('phone', this.userInfo.phone || 0)
 
-            for (var i = 0; i < 10; i++) {
-                this.data.items.push({
-                    content: i + " 向左滑动删除哦,向左滑动删除哦,向左滑动删除哦,向左滑动删除哦,向左滑动删除哦",
-                    isTouchMove: false //默认全隐藏删除
-                })
-            }
-            this.setData({
-                items: this.data.items
-            })
         }
 
         async getOrder(page = 1, reset = false) {

@@ -237,7 +237,12 @@
                 this.userInfo = userResponse.data
                 if (this.userInfo.school_id == 0) {
                     wepy.redirectTo({
-                        url: '/pages/commons/fail'
+                        url: '/pages/commons/fail?type=1'
+                    })
+                }
+                if (this.userInfo.identify !== 5) {
+                    wepy.redirectTo({
+                        url: '/pages/commons/fail?type=2'
                     })
                 }
             }

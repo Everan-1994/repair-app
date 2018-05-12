@@ -173,7 +173,6 @@
         }
 
         async onLoad() {
-
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
 
@@ -204,6 +203,7 @@
 
             wepy.setStorageSync('school_id', this.userInfo.school_id)
             wepy.setStorageSync('phone', this.userInfo.phone || 0)
+            wepy.setStorageSync('identify', this.userInfo.identify)
         }
 
         async onPullDownRefresh() {
