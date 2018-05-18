@@ -48,6 +48,17 @@
         white-space:nowrap;
         text-overflow:ellipsis;
     }
+
+    .loading_tip {
+        position: fixed;
+        height: 80%;
+        width: 100%;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content: center;
+        font-size: 1rem
+    }
 </style>
 <template>
     <view class="page">
@@ -105,6 +116,20 @@
                 <view class="weui-loadmore__tips weui-loadmore__tips_in-line">我是有底线的哦！~~~</view>
             </view>
         </view>
+
+        <view class="loading_tip" wx:if="{{ hidden }}">
+            <view class="weui-msg__icon-area">
+                <icon type="info" size="93"></icon>
+            </view>
+            <view class="weui-msg__text-area">
+                <view class="weui-msg__title">温馨提示</view>
+            </view>
+            <view class="weui-msg__opr-area">
+                <view class="weui-btn-area">
+                    <button wx:if="{{ canIUse }}" class="weui-btn" type="primary" lang="zh_CN" plain="true" open-type="getUserInfo" bindgetuserinfo="bindGetUserInfo">无需注册，一键登录</button>
+                </view>
+            </view>
+        </view>
     </view>
 </template>
 
@@ -120,15 +145,22 @@
         }
         // 可用于页面模板绑定的数据
         data = {
+            hidden: true,
+            canIUse: wx.canIUse('button.open-type.getUserInfo'),
             userInfo: null,
             orders: [],
             page: 1,
             noMoreData: false,
-            load: 1 // 加载数据次数
+            // load: 1 // 加载数据次数
         }
-
+        bindGetUserInfo(e) {
+            if (e.detail.userInfo) {
+                this.hidden = false
+                this._init()
+            }
+        }
         async getOrder(page = 1, reset = false) {
-            this.load++
+            // this.load++
             try {
                 let orderResponse = await api.authRequest({
                     url: 'orders',
@@ -173,6 +205,21 @@
         }
 
         async onLoad() {
+            // 查看是否授权
+            wx.getSetting({
+                success(res) {
+                    if (!res.authSetting['scope.userInfo']) {
+                        this.hidden = true
+                    } else  {
+                        this.hidden = false
+                        this._init()
+                    }
+                }
+            })
+        }
+
+        async _init() {
+
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
 
@@ -192,10 +239,17 @@
                     }
                     // 登陆 后台授权
                     await api.login(info)
+
                     // 获取 用户信息
                     let userResponse = await api.authRequest('user', false)
                     this.userInfo = userResponse.data
                 }
+            }
+            // 完善个人信息
+            if (this.userInfo.school_id == 0) {
+                wepy.redirectTo({
+                    url: '/pages/commons/fail?type=1'
+                })
             }
 
             await this.getOrder()
@@ -223,5 +277,6 @@
             await this.getOrder(this.page)
             this.$apply()
         }
+
     }
 </script>

@@ -223,7 +223,6 @@
                         imageContent: captchaResponse.data.captcha_image_content,
                         expiredAt: Date.parse(captchaResponse.data.expired_at)
                     }
-
                     // 打开 modal
                     this.captchaModalHidden = false
                     this.textareaShow = true

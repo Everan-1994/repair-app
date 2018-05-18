@@ -21,7 +21,7 @@
     }
 </style>
 <template>
-    <view class="page__bd">
+    <view class="page__bd" wx:if="{{ hidden }}">
         <view class="register-wrap">
             <form bindsubmit="submit">
                 <view class="weui-toptips weui-toptips_warn" wx:if="{{ errorMessage }}">{{ errorMessage }}</view>
@@ -127,6 +127,7 @@
             enablePullDownRefresh: true
         }
         data = {
+            hidden: false,
             area: [],
             area_id: 0,
             index: 0,
@@ -227,14 +228,16 @@
 
         }
 
-        async onLoad() {
+        async onShow() {
             // 获取缓存中的 access_token
             let accessToken = wepy.getStorageSync('access_token')
 
             // Token 存在则说明已登录
             if (accessToken) {
+                this.hidden = true
                 let userResponse = await api.authRequest('user', false)
                 this.userInfo = userResponse.data
+
                 if (this.userInfo.school_id == 0) {
                     wepy.redirectTo({
                         url: '/pages/commons/fail?type=1'
@@ -245,18 +248,24 @@
                         url: '/pages/commons/fail?type=2'
                     })
                 }
-            }
 
-            // 获取区域
-            let area = await api.authRequest({
-                url: 'area/select',
-                method: 'GET',
-                data: {
-                    school_id: wepy.getStorageSync('school_id')
-                }
-            }, true)
-            this.area = area.data
-            this.$apply()
+                // 获取区域
+                let area = await api.authRequest({
+                    url: 'area/select',
+                    method: 'GET',
+                    data: {
+                        school_id: wepy.getStorageSync('school_id')
+                    }
+                }, true)
+
+                this.area = area.data
+                this.$apply()
+
+            } else {
+                wepy.switchTab({
+                    url: '/pages/index'
+                })
+            }
         }
 
         async onPullDownRefresh() {

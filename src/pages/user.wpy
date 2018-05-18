@@ -27,7 +27,7 @@
     }
 </style>
 <template>
-    <view class="page">
+    <view class="page" wx:if="{{ hidden }}">
         <view class="page__bd">
             <view class="weui-cells weui-cells_after-title">
                 <navigator class="weui-cell" url="./info">
@@ -92,6 +92,7 @@
             navigationBarTitleText: '个人中心'
         }
         data = {
+            hidden: false,
             // 用户信息
             userInfo: null
         }
@@ -102,10 +103,23 @@
 
             // Token 存在则说明已登录
             if (accessToken) {
+                this.hidden = true
                 // 测试 authRequest 接口
                 let userResponse = await api.authRequest('user', false)
                 this.userInfo = userResponse.data
+
+                // 完善个人信息
+                if (this.userInfo.school_id == 0) {
+                    wepy.redirectTo({
+                        url: '/pages/commons/fail?type=1'
+                    })
+                }
+
                 this.$apply()
+            } else {
+                wepy.switchTab({
+                    url: '/pages/index'
+                })
             }
         }
 
