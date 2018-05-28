@@ -51,10 +51,10 @@
                 </view>
                 <!--右侧内容-->
                 <view class="flowChart-right">
-                    <view class="oneNode">
+                    <view class="oneNode" wx:for="{{ order.processes }}" wx:for-item="process" wx:key="id" wx:index="index">
                         <!--左侧小球-->
-                        <view class="check">
-                            <image src="./../images/reject.png" class="icons"/>
+                        <view class="{{ css[process.type] }}">
+                            <image src='./../images/{{ css_img[process.type] }}.png' class="icons"/>
                         </view>
                         <view class="tag-boder">
                             <view class="tag">
@@ -65,24 +65,24 @@
                             <!--上-->
                             <view class="NodeDetail-title">
                                 <!--头像-->
-                                <image class="imgs" src="{{ order.user.avatar }}" />
+                                <image class="imgs" src="{{ process.user.avatar }}" />
                                 <!--内容-->
                                 <view class="details">
-                                    <view>站长素材赵丹</view>
-                                    <view class="p">回退</view>
+                                    <view>{{ process.user.name }}</view>
+                                    <view class="p">{{ status[process.type] }}</view>
                                 </view>
                             </view>
                             <!--中-->
                             <view class="NodeDetail-content">
                                 <view class="span badge"></view>
 
-                                <view class="p">同意啊，不错不的</view>
+                                <view class="p">{{ process.content }}</view>
                             </view>
                             <!--下-->
                             <view class="NodeDetail-footer">
                                 <view class="span">
                                     <image src="./../images/rtime.png" class="icons"/>
-                                    2017-10-31 22:22:31
+                                    {{ process.created_at }}
                                 </view>
                             </view>
                         </view>
@@ -107,7 +107,7 @@
                                     <view>
                                         {{ order.user.name }}
                                     </view>
-                                    <view class="p">发起申报</view>
+                                    <view class="p">{{ status[0] }}</view>
                                 </view>
                             </view>
                             <!--中-->
@@ -149,7 +149,10 @@
             order: null,
             hasImage: false,
             images: [],
-            type: ['水务', '电务', '木工', '其他']
+            type: ['水务', '电务', '木工', '其他'],
+            status: ['申报', '回退', '派工', '完工', '申述', '评价'],
+            css: ['check-prime', 'check', 'check-repaired', 'check-success', 'check-danger', 'check-praise'],
+            css_img: ['describe', 'reject', 'dispatched', 'finished', 'maintain', 'praise']
         }
 
         // 获取话题数据
